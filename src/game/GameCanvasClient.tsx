@@ -6,7 +6,7 @@ import { Suspense, useRef, useState, useEffect, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import * as THREE from 'three'
-import { Island } from './Island'
+import { Island, getTerrainHeightAt } from './Island'
 import { Player } from './Player'
 import { TouchControls } from './controls/TouchControls'
 import { UI } from './ui/UI'
@@ -70,6 +70,8 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
   } = useGameStore()
   const [isMobile, setIsMobile] = useState(false)
   const [keysPressed, setKeysPressed] = useState<Set<string>>(new Set())
+  const [isJumping, setIsJumping] = useState(false)
+  const [jumpVelocity, setJumpVelocity] = useState(0)
 
   useEffect(() => {
     // Detect mobile device
@@ -82,13 +84,20 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Keyboard controls
+  // Keyboard controls with jump
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase()
-      if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+      if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
         e.preventDefault()
-        setKeysPressed(prev => new Set(prev).add(key))
+        
+        // Handle jump
+        if (key === ' ' && !isJumping) {
+          setIsJumping(true)
+          setJumpVelocity(0.3) // Initial jump force
+        } else {
+          setKeysPressed(prev => new Set(prev).add(key))
+        }
       }
     }
 
@@ -108,7 +117,7 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [])
+  }, [isJumping])
 
   const handlePlayerMove = useCallback((direction: Vector3) => {
     if (player) {
@@ -133,13 +142,49 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
     return distanceFromCenter <= maxRadius - 1 // Leave 1 block buffer from edge
   }
 
+  // Handle terrain following and jumping
+  useEffect(() => {
+    if (!player) return
+    
+    const terrainFollowingInterval = setInterval(() => {
+      const currentHeight = getTerrainHeightAt(player.position.x, player.position.z)
+      let newY = player.position.y
+      
+      if (isJumping) {
+        // Apply jump physics
+        newY = player.position.y + jumpVelocity
+        const newVelocity = jumpVelocity - 0.02 // Gravity
+        setJumpVelocity(newVelocity)
+        
+        // Check if landed on terrain
+        if (newY <= currentHeight + 0.1) {
+          newY = currentHeight
+          setIsJumping(false)
+          setJumpVelocity(0)
+        }
+      } else {
+        // Stick to terrain
+        newY = currentHeight
+      }
+      
+      // Update player position with terrain following
+      updatePlayerPosition({
+        x: player.position.x,
+        y: newY,
+        z: player.position.z
+      })
+    }, 1000 / 60) // 60fps terrain following
+    
+    return () => clearInterval(terrainFollowingInterval)
+  }, [player, isJumping, jumpVelocity, updatePlayerPosition])
+
   // Handle keyboard movement
   useEffect(() => {
     const moveInterval = setInterval(() => {
       if (keysPressed.size === 0) return
       
       let direction = new Vector3(0, 0, 0)
-      const moveSpeed = 0.2
+      const moveSpeed = 0.15 // Slightly slower for more precise movement
       
       // WASD and Arrow Keys
       if (keysPressed.has('w') || keysPressed.has('arrowup')) {
@@ -239,6 +284,12 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
       {isMobile && (
         <TouchControls
           onMove={handlePlayerMove}
+          onJump={() => {
+            if (!isJumping) {
+              setIsJumping(true)
+              setJumpVelocity(0.3)
+            }
+          }}
           onAction={(action) => {
             console.log('Action:', action)
             

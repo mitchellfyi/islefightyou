@@ -265,6 +265,7 @@ export function UI() {
           <h3 className="font-bold mb-2">🎮 Controls</h3>
           <div className="space-y-1">
             <div>⌨️ WASD / Arrow Keys: Move</div>
+            <div>⬆️ Space Bar: Jump</div>
             <div>🔄 Mouse Wheel: Zoom in/out</div>
             <div>📱 Touch: Use on-screen controls</div>
           </div>

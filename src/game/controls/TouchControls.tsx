@@ -7,9 +7,10 @@ import { motion } from 'framer-motion'
 interface TouchControlsProps {
   onMove: (direction: Vector3) => void
   onAction: (action: string) => void
+  onJump?: () => void
 }
 
-export function TouchControls({ onMove, onAction }: TouchControlsProps) {
+export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) {
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 })
   const [isJoystickActive, setIsJoystickActive] = useState(false)
   const joystickRef = useRef<HTMLDivElement>(null)
@@ -126,6 +127,16 @@ export function TouchControls({ onMove, onAction }: TouchControlsProps) {
       {/* Action Buttons */}
       <div className="absolute bottom-8 right-8 pointer-events-auto">
         <div className="flex flex-col gap-3">
+          {/* Jump Button */}
+          <motion.button
+            className="w-16 h-16 bg-yellow-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
+            whileTap={{ scale: 0.9 }}
+            onTouchStart={() => onJump?.()}
+            onClick={() => onJump?.()}
+          >
+            ⬆️
+          </motion.button>
+          
           {/* Attack Button */}
           <motion.button
             className="w-16 h-16 bg-red-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"

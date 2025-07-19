@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Billboard, Text } from '@react-three/drei'
-import { Mesh, Vector3 } from 'three'
+import { Mesh, Vector3, Group } from 'three'
 import * as THREE from 'three'
 import { Player as PlayerType } from '@/types/game'
 
@@ -13,38 +13,81 @@ interface PlayerProps {
 }
 
 export function Player({ player, onMove }: PlayerProps) {
-  const meshRef = useRef<Mesh>(null)
+  const characterRef = useRef<Group>(null)
+  const bodyRef = useRef<Mesh>(null)
 
-  // Simple bobbing animation
+  // Walking and idle animations
   useFrame((state) => {
-    if (meshRef.current) {
+    if (characterRef.current && bodyRef.current) {
       // Gentle bobbing animation when idle
-      const idleMovement = Math.sin(state.clock.elapsedTime * 4) * 0.05
-      meshRef.current.position.y = player.position.y + 1 + idleMovement
+      const idleMovement = Math.sin(state.clock.elapsedTime * 4) * 0.02
+      characterRef.current.position.y = player.position.y + idleMovement
+      
+      // Body slight rotation for character appeal
+      bodyRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.05
     }
   })
 
   return (
     <group position={[player.position.x, player.position.y, player.position.z]}>
-      {/* Player Character */}
-      <mesh
-        ref={meshRef}
-        position={[0, 1, 0]}
-        castShadow
-      >
+      {/* Character Model */}
+      <group ref={characterRef}>
         {/* Body */}
-        <boxGeometry args={[0.6, 1.2, 0.4]} />
-        <meshLambertMaterial color="#ff9800" />
-      </mesh>
+        <mesh
+          ref={bodyRef}
+          position={[0, 1, 0]}
+          castShadow
+        >
+          <capsuleGeometry args={[0.3, 0.8, 4, 8]} />
+          <meshLambertMaterial color="#4a90e2" />
+        </mesh>
 
-      {/* Head */}
-      <mesh
-        position={[0, 2, 0]}
-        castShadow
-      >
-        <sphereGeometry args={[0.4, 8, 8]} />
-        <meshLambertMaterial color="#ffb74d" />
-      </mesh>
+        {/* Head */}
+        <mesh position={[0, 1.7, 0]} castShadow>
+          <sphereGeometry args={[0.35, 12, 8]} />
+          <meshLambertMaterial color="#fdbcb4" />
+        </mesh>
+
+        {/* Eyes */}
+        <mesh position={[-0.1, 1.8, 0.3]} castShadow>
+          <sphereGeometry args={[0.05, 6, 6]} />
+          <meshLambertMaterial color="#000000" />
+        </mesh>
+        <mesh position={[0.1, 1.8, 0.3]} castShadow>
+          <sphereGeometry args={[0.05, 6, 6]} />
+          <meshLambertMaterial color="#000000" />
+        </mesh>
+
+        {/* Arms */}
+        <mesh position={[-0.5, 1.2, 0]} castShadow>
+          <capsuleGeometry args={[0.1, 0.6, 3, 6]} />
+          <meshLambertMaterial color="#fdbcb4" />
+        </mesh>
+        <mesh position={[0.5, 1.2, 0]} castShadow>
+          <capsuleGeometry args={[0.1, 0.6, 3, 6]} />
+          <meshLambertMaterial color="#fdbcb4" />
+        </mesh>
+
+        {/* Legs */}
+        <mesh position={[-0.15, 0.3, 0]} castShadow>
+          <capsuleGeometry args={[0.12, 0.6, 3, 6]} />
+          <meshLambertMaterial color="#2c3e50" />
+        </mesh>
+        <mesh position={[0.15, 0.3, 0]} castShadow>
+          <capsuleGeometry args={[0.12, 0.6, 3, 6]} />
+          <meshLambertMaterial color="#2c3e50" />
+        </mesh>
+
+        {/* Feet */}
+        <mesh position={[-0.15, -0.1, 0.1]} castShadow>
+          <boxGeometry args={[0.2, 0.1, 0.3]} />
+          <meshLambertMaterial color="#8d4e85" />
+        </mesh>
+        <mesh position={[0.15, -0.1, 0.1]} castShadow>
+          <boxGeometry args={[0.2, 0.1, 0.3]} />
+          <meshLambertMaterial color="#8d4e85" />
+        </mesh>
+      </group>
 
       {/* Health Bar */}
       <HealthBar 
