@@ -6,6 +6,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { createWorldGenerator, generateSeed } from '@/game/generation/WorldGenerator'
 import { ResourceType } from '@/types/game'
 import { SurvivalManager } from '@/game/systems/SurvivalManager'
+import { terrainNoise } from '@/game/utils/noise'
 import { motion } from 'framer-motion'
 
 export default function GamePage() {
@@ -44,7 +45,7 @@ export default function GamePage() {
         level: 1,
         experience: 0,
         survival: SurvivalManager.createDefaultStats(),
-        position: { x: 0, y: 4, z: 0 },
+        position: { x: 0, y: 0, z: 0 }, // Will be set to terrain height later
         rotation: { x: 0, y: 0, z: 0 },
         inventory: [],
         weapons: [],
@@ -76,8 +77,15 @@ export default function GamePage() {
       addResource({ type: ResourceType.BANDAGE, quantity: 1 })
 
       // Set the game state
-      setPlayer(demoPlayer)
       setCurrentIsland(island)
+      
+      // Position player on terrain at center of island
+      const terrainHeight = terrainNoise.islandHeight(0, 0)
+      const playerWithPosition = {
+        ...demoPlayer,
+        position: { x: 0, y: terrainHeight + 0.5, z: 0 } // 0.5 units above terrain
+      }
+      setPlayer(playerWithPosition)
       
       // Debug log to verify island generation
       console.log('🏝️ Island generated successfully!', {
@@ -85,7 +93,8 @@ export default function GamePage() {
         resourceNodes: island.resourceNodes.length,
         heightMapSize: `${island.heightMap.length}x${island.heightMap[0]?.length}`,
         sampleHeight: island.heightMap[32]?.[32],
-        sampleResource: island.resourceNodes[0]
+        sampleResource: island.resourceNodes[0],
+        playerStartHeight: terrainHeight
       })
       
       setIsInitialized(true)
@@ -138,7 +147,7 @@ function LoadingScreen() {
       {/* Splash Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/assets/splash.png)' }}
+        style={{ backgroundImage: 'url(/assets/splash-background.png)' }}
       />
       
       {/* Overlay for better text readability */}

@@ -42,7 +42,7 @@ export function Island({ island, buildings }: IslandProps) {
   const terrainHeights = useMemo(() => {
     console.log('🗺️ Computing realistic island terrain heights...')
     const size = 33 // For 32x32 plane geometry (needs size+1 vertices)
-    const heights = []
+    const heights: number[][] = []
     
     for (let i = 0; i < size; i++) {
       heights[i] = []

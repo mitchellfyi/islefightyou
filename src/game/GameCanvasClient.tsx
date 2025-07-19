@@ -12,9 +12,77 @@ import { TouchControls } from './controls/TouchControls'
 import { UI } from './ui/UI'
 import { useGameStore } from '../stores/gameStore'
 import { ResourceType } from '@/types/game'
+import { terrainNoise } from './utils/noise'
 
 interface GameCanvasClientProps {
   className?: string
+}
+
+// Terrain following controller inside Canvas
+function TerrainFollowController({ 
+  player, 
+  currentIsland, 
+  isJumping, 
+  jumpVelocity, 
+  setJumpVelocity, 
+  setIsJumping, 
+  updatePlayerPosition 
+}: {
+  player: any
+  currentIsland: any
+  isJumping: boolean
+  jumpVelocity: number
+  setJumpVelocity: (v: number) => void
+  setIsJumping: (j: boolean) => void
+  updatePlayerPosition: (pos: any) => void
+}) {
+  useFrame((state) => {
+    if (!player || !currentIsland) return
+    
+    // Get terrain height using our noise system (same as terrain generation)
+    const currentHeight = terrainNoise.islandHeight(player.position.x, player.position.z)
+    let newY = player.position.y
+    
+    // Debug every 60 frames (once per second at 60fps)
+    if (Math.floor(state.clock.elapsedTime * 60) % 60 === 0) {
+      console.log('🎯 Terrain snap debug:', {
+        playerXZ: `${player.position.x.toFixed(1)}, ${player.position.z.toFixed(1)}`,
+        terrainHeight: currentHeight.toFixed(2),
+        playerY: player.position.y.toFixed(2),
+        targetY: (currentHeight + 0.5).toFixed(2),
+        isJumping
+      })
+    }
+    
+    if (isJumping) {
+      // Apply jump physics
+      newY = player.position.y + jumpVelocity
+      const newVelocity = jumpVelocity - 0.015 // Lighter gravity for better feel
+      setJumpVelocity(newVelocity)
+      
+      // Check if landed on terrain
+      if (newY <= currentHeight + 0.5) { // Character height offset - much closer to terrain
+        newY = currentHeight + 0.5
+        setIsJumping(false)
+        setJumpVelocity(0)
+      }
+    } else {
+      // Directly snap to terrain height for immediate following
+      const targetY = currentHeight + 0.5 // Character stands 0.5 units above terrain
+      newY = targetY
+    }
+    
+    // Always update Y position for terrain following
+    if (Math.abs(newY - player.position.y) > 0.001) {
+      updatePlayerPosition({
+        x: player.position.x,
+        y: newY,
+        z: player.position.z
+      })
+    }
+  })
+  
+  return null // This component doesn't render anything visual
 }
 
 // Camera controller component for smooth following
@@ -94,7 +162,7 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
         // Handle jump
         if (key === ' ' && !isJumping) {
           setIsJumping(true)
-          setJumpVelocity(0.3) // Initial jump force
+          setJumpVelocity(0.25) // More reasonable jump force
         } else {
           setKeysPressed(prev => new Set(prev).add(key))
         }
@@ -121,62 +189,28 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
 
   const handlePlayerMove = useCallback((direction: Vector3) => {
     if (player) {
-      const newPosition = {
-        x: player.position.x + direction.x,
-        y: player.position.y + direction.y,
-        z: player.position.z + direction.z
-      }
+      const newX = player.position.x + direction.x
+      const newZ = player.position.z + direction.z
       
       // Check if new position is within island boundaries
-      if (isPositionValid(newPosition.x, newPosition.z)) {
-        updatePlayerPosition(newPosition)
+      if (isPositionValid(newX, newZ)) {
+        // Only update X and Z, let terrain following handle Y
+        updatePlayerPosition({
+          x: newX,
+          y: player.position.y, // Keep current Y, terrain following will update it
+          z: newZ
+        })
       }
     }
   }, [player, updatePlayerPosition])
 
   // Check if a position is within the island boundaries
   const isPositionValid = (x: number, z: number): boolean => {
-    const ISLAND_SIZE = 32
-    const maxRadius = ISLAND_SIZE / 2.5 // Same as island generation
-    const distanceFromCenter = Math.sqrt(x * x + z * z)
-    return distanceFromCenter <= maxRadius - 1 // Leave 1 block buffer from edge
+    // Check if position is on solid terrain (above water level)
+    const terrainHeight = terrainNoise.islandHeight(x, z)
+    return terrainHeight > -2 // Allow movement on land and shallow water
   }
 
-  // Handle terrain following and jumping
-  useEffect(() => {
-    if (!player) return
-    
-    const terrainFollowingInterval = setInterval(() => {
-      const currentHeight = getTerrainHeightAt(player.position.x, player.position.z, currentIsland || undefined)
-      let newY = player.position.y
-      
-      if (isJumping) {
-        // Apply jump physics
-        newY = player.position.y + jumpVelocity
-        const newVelocity = jumpVelocity - 0.02 // Gravity
-        setJumpVelocity(newVelocity)
-        
-        // Check if landed on terrain
-        if (newY <= currentHeight + 0.1) {
-          newY = currentHeight
-          setIsJumping(false)
-          setJumpVelocity(0)
-        }
-      } else {
-        // Stick to terrain
-        newY = currentHeight
-      }
-      
-      // Update player position with terrain following
-      updatePlayerPosition({
-        x: player.position.x,
-        y: newY,
-        z: player.position.z
-      })
-    }, 1000 / 60) // 60fps terrain following
-    
-    return () => clearInterval(terrainFollowingInterval)
-  }, [player, isJumping, jumpVelocity, updatePlayerPosition])
 
   // Handle keyboard movement
   useEffect(() => {
@@ -184,7 +218,7 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
       if (keysPressed.size === 0) return
       
       let direction = new Vector3(0, 0, 0)
-      const moveSpeed = 0.15 // Slightly slower for more precise movement
+      const moveSpeed = 0.12 // Balanced speed for terrain following
       
       // WASD and Arrow Keys
       if (keysPressed.has('w') || keysPressed.has('arrowup')) {
@@ -280,6 +314,17 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
             />
           )}
 
+          {/* Terrain Following Controller */}
+          <TerrainFollowController 
+            player={player}
+            currentIsland={currentIsland}
+            isJumping={isJumping}
+            jumpVelocity={jumpVelocity}
+            setJumpVelocity={setJumpVelocity}
+            setIsJumping={setIsJumping}
+            updatePlayerPosition={updatePlayerPosition}
+          />
+
           {/* Camera Controller */}
           <CameraController 
             target={player ? new Vector3(player.position.x, player.position.y + 1, player.position.z) : null} 
@@ -294,7 +339,7 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
           onJump={() => {
             if (!isJumping) {
               setIsJumping(true)
-              setJumpVelocity(0.3)
+              setJumpVelocity(0.25)
             }
           }}
           onAction={(action) => {

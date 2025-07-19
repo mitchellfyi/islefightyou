@@ -161,7 +161,28 @@ export class PerlinNoise {
   }
 
   /**
-   * Generate island-shaped terrain height
+   * Generate enhanced fractal noise for natural terrain with better distribution
+   * Uses multiple noise layers with carefully tuned parameters for realistic terrain
+   */
+  public naturalTerrainNoise(x: number, y: number): number {
+    // Large scale features (broad hills and valleys)
+    const largeFeatures = this.fractalNoise2D(x, y, 2, 0.6, 0.02) * 2.0
+    
+    // Medium scale features (rolling hills)
+    const mediumFeatures = this.fractalNoise2D(x, y, 3, 0.4, 0.04) * 1.5
+    
+    // Fine scale features (surface detail)
+    const fineFeatures = this.fractalNoise2D(x, y, 4, 0.5, 0.08) * 1.0
+    
+    // Micro details (small bumps and variation)
+    const microDetails = this.fractalNoise2D(x, y, 5, 0.3, 0.16) * 0.5
+    
+    // Combine all layers with decreasing influence
+    return (largeFeatures + mediumFeatures + fineFeatures + microDetails) * 0.25
+  }
+
+  /**
+   * Generate island-shaped terrain height with enhanced natural variation
    * @param x X coordinate
    * @param y Y coordinate
    * @param islandRadius Maximum radius of the island
@@ -181,24 +202,39 @@ export class PerlinNoise {
       return -5 // Deep water for swimming/diving
     }
 
-    // Base island shape (higher in center, lower at edges)
+    // Enhanced base island shape - mostly flat with gentle hills
     const normalizedDistance = distanceFromCenter / islandRadius
-    const islandShape = Math.pow(1 - normalizedDistance, 2) // Smoother falloff
+    
+    // Create a flatter center with gentle slopes toward edges
+    let islandShape: number
+    if (normalizedDistance < 0.3) {
+      // Center plateau - relatively flat
+      islandShape = 0.95 - (normalizedDistance * 0.1)
+    } else if (normalizedDistance < 0.7) {
+      // Gentle rolling hills zone
+      islandShape = 0.85 - ((normalizedDistance - 0.3) * 0.5)
+    } else {
+      // Steep transition to water at edges
+      const edgeT = (normalizedDistance - 0.7) / 0.3
+      islandShape = 0.7 * Math.pow(1 - edgeT, 3)
+    }
+    
     const baseHeight = islandShape * centerHeight
 
-    // Multi-octave noise for natural variation (reduced intensity)
-    const detailNoise = this.fractalNoise2D(x, y, 4, 0.5, 0.08) * 1 // Fine details
-    const mediumNoise = this.fractalNoise2D(x, y, 3, 0.4, 0.04) * 1.5 // Medium features  
-    const largeNoise = this.fractalNoise2D(x, y, 2, 0.6, 0.02) * 2 // Large formations
-
-    // Combine all noise layers with reduced impact
-    const totalNoise = (detailNoise + mediumNoise + largeNoise) * 0.5
-    let finalHeight = baseHeight + totalNoise
+    // Use enhanced natural terrain noise for realistic variation
+    const terrainVariation = this.naturalTerrainNoise(x, y) * 1.5
+    
+    // Add some mountain peaks occasionally
+    const mountainNoise = this.fractalNoise2D(x, y, 3, 0.7, 0.03)
+    const mountainPeaks = mountainNoise > 0.6 ? Math.pow(mountainNoise - 0.6, 2) * 6 : 0
+    
+    // Combine base terrain with natural variation and occasional peaks
+    let finalHeight = baseHeight + terrainVariation + mountainPeaks
 
     // Smooth water transition at edges
-    if (distanceFromCenter > islandRadius * 0.7) {
+    if (distanceFromCenter > islandRadius * 0.75) {
       // Gradual transition to water at edges
-      const edgeFactor = (islandRadius - distanceFromCenter) / (islandRadius * 0.3)
+      const edgeFactor = (islandRadius - distanceFromCenter) / (islandRadius * 0.25)
       finalHeight = finalHeight * Math.max(0, edgeFactor)
     }
 
@@ -211,7 +247,7 @@ export class PerlinNoise {
   }
 
   /**
-   * Get deterministic biome at position based on height and location
+   * Get deterministic biome at position based on height, location, and environmental factors
    * @param x X coordinate
    * @param y Y coordinate  
    * @param height Terrain height
@@ -222,27 +258,87 @@ export class PerlinNoise {
     // Water areas
     if (height <= 0) return 'water'
     
-    // Beach areas (close to water or island edge)
-    if (height < 1 || distanceFromCenter > 10) return 'beach'
+    // Beach areas (just above water level)
+    if (height < 1) return 'beach'
     
-    // Mountain peaks
-    if (height > 6) return 'mountain'
+    // Mountain peaks (high elevation)
+    if (height > 7) return 'mountain'
     
-    // Use noise to determine forest vs grassland
+    // Generate environmental factors using noise
+    const moistureNoise = this.noise2D(x * 0.03, y * 0.03 + 1000)
+    const temperatureNoise = this.noise2D(x * 0.04 + 500, y * 0.04)
     const biomeNoise = this.noise2D(x * 0.05, y * 0.05)
     
-    if (distanceFromCenter < 3) {
-      // Center of island - meadows
+    // Normalize to 0-1 range
+    const moisture = (moistureNoise + 1) / 2
+    const temperature = (temperatureNoise + 1) / 2
+    const variation = (biomeNoise + 1) / 2
+    
+    // Center plateau - open meadow/grassland for building
+    if (distanceFromCenter < 3 && height > 2) {
       return 'meadow'
-    } else if (biomeNoise > 0.2) {
-      // Forest areas
-      return 'forest'
-    } else if (height > 3 && biomeNoise < -0.3) {
-      // Rocky areas
+    }
+    
+    // Rocky mountain areas (high elevation or very steep)
+    if (height > 5 || (height > 3 && variation < 0.2)) {
       return 'mountain'
-    } else {
-      // Default grassland
-      return 'grassland'
+    }
+    
+    // Desert areas (hot and dry - rare on tropical island)
+    if (temperature > 0.8 && moisture < 0.2 && height > 2) {
+      return 'desert'
+    }
+    
+    // Swamp areas (wet lowlands)
+    if (moisture > 0.8 && height < 2.5 && temperature > 0.4) {
+      return 'swamp'
+    }
+    
+    // Forest distribution based on moisture and elevation
+    if (moisture > 0.5 && height > 1.5 && height < 6) {
+      // Dense forest in moist mid-elevation areas
+      if (variation > 0.3) {
+        return 'forest'
+      }
+    }
+    
+    // Coastal areas become beach if close to edge
+    if (distanceFromCenter > 10 && height < 2) {
+      return 'beach'
+    }
+    
+    // Default to grassland for remaining areas
+    return 'grassland'
+  }
+
+  /**
+   * Get biome color for rendering
+   * @param biome Biome type string
+   * @param height Terrain height for variation
+   * @returns RGB color array [r, g, b] (0-1 range)
+   */
+  public getBiomeColor(biome: string, height: number): [number, number, number] {
+    const heightVariation = Math.min(1, height / 8) * 0.3
+    
+    switch (biome) {
+      case 'water':
+        return [0.1, 0.4, 0.8] // Blue
+      case 'beach':
+        return [0.9 + heightVariation * 0.1, 0.8 + heightVariation * 0.1, 0.6] // Sandy
+      case 'grassland':
+        return [0.4 + heightVariation * 0.2, 0.7 + heightVariation * 0.1, 0.3] // Green
+      case 'meadow':
+        return [0.5 + heightVariation * 0.2, 0.8 + heightVariation * 0.1, 0.4] // Bright green
+      case 'forest':
+        return [0.2 + heightVariation * 0.1, 0.5 + heightVariation * 0.1, 0.2] // Dark green
+      case 'mountain':
+        return [0.5 + heightVariation * 0.3, 0.5 + heightVariation * 0.3, 0.5 + heightVariation * 0.2] // Gray
+      case 'desert':
+        return [0.8 + heightVariation * 0.2, 0.7 + heightVariation * 0.2, 0.4] // Sandy brown
+      case 'swamp':
+        return [0.3 + heightVariation * 0.1, 0.4 + heightVariation * 0.1, 0.2] // Murky green
+      default:
+        return [0.5, 0.7, 0.3] // Default green
     }
   }
 }
