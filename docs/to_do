@@ -1,0 +1,10 @@
+# Feature TODOs
+
+Current priorities. See `TODO.md` for the full backlog.
+
+- Implement real-time multiplayer using Socket.io for synchronizing player actions.
+- Connect Supabase API via `src/lib/supabase.ts` to store players and islands.
+- Add enemy AI behaviors and spawning logic.
+- Expand building system with resource costs and placement controls.
+- Integrate crafting recipes based on `ResourceType`.
+- Build out the combat system with hitscan bullets and harpoon projectiles.
