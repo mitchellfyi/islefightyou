@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/stores/gameStore'
+import { SurvivalManager } from '@/game/systems/SurvivalManager'
 import { Inventory } from './Inventory'
 import { Settings } from './Settings'
 import { BuildMenu } from './BuildMenu'
@@ -10,10 +11,19 @@ import { BuildMenu } from './BuildMenu'
 export function UI() {
   const { gameState } = useGameStore()
   const [activePanel, setActivePanel] = useState<string | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
 
   const togglePanel = (panel: string) => {
     setActivePanel(activePanel === panel ? null : panel)
   }
+
+  // Update survival warnings
+  useEffect(() => {
+    if (gameState.player) {
+      const newWarnings = SurvivalManager.getWarnings(gameState.player.survival)
+      setWarnings(newWarnings)
+    }
+  }, [gameState.player?.survival])
 
   if (!gameState.player) return null
 
@@ -29,11 +39,43 @@ export function UI() {
               <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-red-500 transition-all duration-300"
-                  style={{ width: `${(gameState.player.health / gameState.player.maxHealth) * 100}%` }}
+                  style={{ width: `${(gameState.player.survival.health / gameState.player.survival.maxHealth) * 100}%` }}
                 />
               </div>
-              <span className="text-xs">{gameState.player.health}/{gameState.player.maxHealth}</span>
+              <span className="text-xs">{Math.round(gameState.player.survival.health)}/{gameState.player.survival.maxHealth}</span>
             </div>
+
+            {/* Hunger */}
+            <div className="flex items-center gap-2">
+              <span>🍖</span>
+              <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-orange-500 transition-all duration-300"
+                  style={{ width: `${(gameState.player.survival.hunger / gameState.player.survival.maxHunger) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs">{Math.round(gameState.player.survival.hunger)}</span>
+            </div>
+
+            {/* Thirst */}
+            <div className="flex items-center gap-2">
+              <span>💧</span>
+              <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-300"
+                  style={{ width: `${(gameState.player.survival.thirst / gameState.player.survival.maxThirst) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs">{Math.round(gameState.player.survival.thirst)}</span>
+            </div>
+
+            {/* Bleed Status */}
+            {gameState.player.survival.bleed > 0 && (
+              <div className="flex items-center gap-2">
+                <span>🩸</span>
+                <span className="text-xs text-red-400">x{gameState.player.survival.bleed}</span>
+              </div>
+            )}
 
             {/* Level */}
             <div className="flex items-center gap-2">
@@ -50,9 +92,22 @@ export function UI() {
         </div>
       </div>
 
-      {/* Resource Counter */}
+      {/* Resource Counter & Economy */}
       <div className="absolute top-4 right-4 pointer-events-auto">
-        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white">
+        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white space-y-3">
+          {/* Economy */}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-1">
+              <span>💰</span>
+              <span>{gameState.player.economy.gold}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>💎</span>
+              <span>{gameState.player.economy.pearls}</span>
+            </div>
+          </div>
+          
+          {/* Resources */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             {gameState.inventory.slice(0, 6).map((resource) => (
               <div key={resource.type} className="flex items-center gap-1">
@@ -107,6 +162,20 @@ export function UI() {
         </div>
       </div>
 
+      {/* Debug Controls (Bottom Left) */}
+      <div className="absolute bottom-4 left-4 pointer-events-auto">
+        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
+          <div className="flex gap-2">
+            <button
+              onClick={() => useGameStore.getState().applyDamage(10, true)}
+              className="px-3 py-2 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+            >
+              Take Damage
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Panels */}
       <AnimatePresence>
         {activePanel === 'inventory' && (
@@ -149,6 +218,20 @@ export function UI() {
           <div className="bg-white rounded-lg p-8 text-center">
             <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
             <p className="text-gray-700">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Survival Warnings */}
+      {warnings.length > 0 && (
+        <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+          <div className="bg-yellow-500 text-black rounded-lg p-4 max-w-md">
+            <h3 className="font-bold mb-2">⚠️ Warning</h3>
+            <ul className="space-y-1">
+              {warnings.map((warning, index) => (
+                <li key={index} className="text-sm">{warning}</li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
@@ -206,9 +289,18 @@ function getResourceIcon(type: string): string {
     case 'wood': return '🪵'
     case 'stone': return '🪨'
     case 'metal': return '⚙️'
-    case 'food': return '🍎'
-    case 'water': return '💧'
-    case 'coal': return '🪨'
+    case 'coral': return '🪸'
+    case 'fish': return '🐟'
+    case 'cooked_fish': return '🍖'
+    case 'coconut': return '🥥'
+    case 'berries': return '🫐'
+    case 'bandage': return '🩹'
+    case 'first_aid_kit': return '🏥'
+    case 'basic_ammo': return '🔫'
+    case 'advanced_ammo': return '💥'
+    case 'harpoon': return '🔱'
+    case 'energy_cell': return '🔋'
+    case 'pearl_fragment': return '💎'
     case 'crystal': return '💎'
     default: return '📦'
   }

@@ -54,8 +54,8 @@ export function Player({ player, onMove }: PlayerProps) {
 
       {/* Health Bar */}
       <HealthBar 
-        health={player.health} 
-        maxHealth={player.maxHealth} 
+        health={player.survival.health} 
+        maxHealth={player.survival.maxHealth} 
         position={[player.position.x, player.position.y + 3, player.position.z]}
       />
 

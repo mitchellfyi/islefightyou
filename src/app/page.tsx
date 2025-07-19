@@ -5,6 +5,7 @@ import { GameCanvas } from '@/game/GameCanvas'
 import { useGameStore } from '@/stores/gameStore'
 import { createWorldGenerator, generateSeed } from '@/game/generation/WorldGenerator'
 import { ResourceType } from '@/types/game'
+import { SurvivalManager } from '@/game/systems/SurvivalManager'
 import { motion } from 'framer-motion'
 
 export default function GamePage() {
@@ -38,12 +39,19 @@ export default function GamePage() {
         email: 'demo@game.com',
         level: 1,
         experience: 0,
-        health: 100,
-        maxHealth: 100,
+        survival: SurvivalManager.createDefaultStats(),
         position: { x: 0, y: 5, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         inventory: [],
+        weapons: [],
+        economy: {
+          gold: 100,
+          pearls: 0,
+          threatScore: 1,
+          islandRadius: 32
+        },
         isOnline: true,
+        isRaidable: false, // Start with PvP disabled
         lastActive: new Date()
       }
 
@@ -59,7 +67,9 @@ export default function GamePage() {
       // Add some starter resources
       addResource({ type: ResourceType.WOOD, quantity: 10 })
       addResource({ type: ResourceType.STONE, quantity: 5 })
-      addResource({ type: ResourceType.FOOD, quantity: 3 })
+      addResource({ type: ResourceType.FISH, quantity: 3 })
+      addResource({ type: ResourceType.COCONUT, quantity: 2 })
+      addResource({ type: ResourceType.BANDAGE, quantity: 1 })
 
       // Set the game state
       setPlayer(demoPlayer)
@@ -124,7 +134,7 @@ function LoadingScreen() {
           animate={{ opacity: 1, y: 0 }}
           className="text-4xl md:text-6xl font-bold text-white mb-4 text-shadow"
         >
-          🏝️ Island Conquest
+          🏝️ Isle Fight You
         </motion.h1>
         
         <motion.p 
@@ -133,7 +143,7 @@ function LoadingScreen() {
           transition={{ delay: 0.5 }}
           className="text-xl text-blue-200 mb-8"
         >
-          Survive. Build. Conquer.
+          Paradise punches back.
         </motion.p>
         
         <motion.div

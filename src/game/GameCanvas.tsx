@@ -16,7 +16,7 @@ interface GameCanvasProps {
 
 export function GameCanvas({ className = '' }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { gameState, updatePlayerPosition } = useGameStore()
+  const { gameState, updatePlayerPosition, consumeItem, applyDamage } = useGameStore()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -125,7 +125,29 @@ export function GameCanvas({ className = '' }: GameCanvasProps) {
           onMove={handlePlayerMove}
           onAction={(action) => {
             console.log('Action:', action)
-            // Handle touch actions here
+            
+            switch (action) {
+              case 'attack':
+                // Demo: damage self for testing
+                applyDamage(10, true)
+                break
+              case 'heal':
+                // Try to consume a healing item
+                if (gameState.inventory.find(item => item.type === ResourceType.FIRST_AID_KIT)) {
+                  consumeItem(ResourceType.FIRST_AID_KIT)
+                } else if (gameState.inventory.find(item => item.type === ResourceType.BANDAGE)) {
+                  consumeItem(ResourceType.BANDAGE)
+                } else if (gameState.inventory.find(item => item.type === ResourceType.COOKED_FISH)) {
+                  consumeItem(ResourceType.COOKED_FISH)
+                }
+                break
+              case 'inventory':
+                // This will be handled by the UI panel system
+                break
+              case 'settings':
+                // This will be handled by the UI panel system
+                break
+            }
           }}
         />
       )}

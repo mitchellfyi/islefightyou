@@ -146,14 +146,14 @@ export function TouchControls({ onMove, onAction }: TouchControlsProps) {
             🏗️
           </motion.button>
           
-          {/* Harvest Button */}
+          {/* Quick Heal Button */}
           <motion.button
             className="w-16 h-16 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
             whileTap={{ scale: 0.9 }}
-            onTouchStart={() => onAction('harvest')}
-            onClick={() => onAction('harvest')}
+            onTouchStart={() => onAction('heal')}
+            onClick={() => onAction('heal')}
           >
-            ⛏️
+            🏥
           </motion.button>
         </div>
       </div>
