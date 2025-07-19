@@ -107,7 +107,6 @@ export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) 
           onMouseDown={handleJoystickStart}
         >
           <motion.div
-            className="absolute w-8 h-8 bg-white rounded-full shadow-lg"
             style={{
               left: '50%',
               top: '50%',
@@ -117,6 +116,7 @@ export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) 
               y: joystickPos.y - 16,
             }}
             transition={{ type: 'tween', duration: 0.1 }}
+            className="absolute w-8 h-8 bg-white rounded-full shadow-lg"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-4 h-4 bg-white/50 rounded-full" />
@@ -129,40 +129,40 @@ export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) 
         <div className="flex flex-col gap-3">
           {/* Jump Button */}
           <motion.button
-            className="w-16 h-16 bg-yellow-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onJump?.()}
             onClick={() => onJump?.()}
+            className="w-16 h-16 bg-yellow-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
           >
             ⬆️
           </motion.button>
           
           {/* Attack Button */}
           <motion.button
-            className="w-16 h-16 bg-red-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onAction('attack')}
             onClick={() => onAction('attack')}
+            className="w-16 h-16 bg-red-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
           >
             ⚔️
           </motion.button>
           
           {/* Build Button */}
           <motion.button
-            className="w-16 h-16 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onAction('build')}
             onClick={() => onAction('build')}
+            className="w-16 h-16 bg-blue-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
           >
             🏗️
           </motion.button>
           
           {/* Quick Heal Button */}
           <motion.button
-            className="w-16 h-16 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onAction('heal')}
             onClick={() => onAction('heal')}
+            className="w-16 h-16 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white font-bold"
           >
             🏥
           </motion.button>
@@ -174,20 +174,20 @@ export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) 
         <div className="flex gap-3">
           {/* Inventory Button */}
           <motion.button
-            className="w-12 h-12 bg-gray-600 rounded-lg shadow-lg flex items-center justify-center text-white"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onAction('inventory')}
             onClick={() => onAction('inventory')}
+            className="w-12 h-12 bg-gray-600 rounded-lg shadow-lg flex items-center justify-center text-white"
           >
             🎒
           </motion.button>
           
           {/* Settings Button */}
           <motion.button
-            className="w-12 h-12 bg-gray-600 rounded-lg shadow-lg flex items-center justify-center text-white"
             whileTap={{ scale: 0.9 }}
             onTouchStart={() => onAction('settings')}
             onClick={() => onAction('settings')}
+            className="w-12 h-12 bg-gray-600 rounded-lg shadow-lg flex items-center justify-center text-white"
           >
             ⚙️
           </motion.button>

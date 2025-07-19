@@ -15,7 +15,7 @@
     "@react-three/drei": "^10.5.1",
     "@react-three/fiber": "^9.2.0",
     "@supabase/supabase-js": "^2.39.0",
-    "framer-motion": "^10.16.16",
+    "framer-motion": "^12.23.6",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
     "react": "^19.0.0",

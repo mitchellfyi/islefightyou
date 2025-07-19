@@ -79,6 +79,15 @@ export default function GamePage() {
       setPlayer(demoPlayer)
       setCurrentIsland(island)
       
+      // Debug log to verify island generation
+      console.log('🏝️ Island generated successfully!', {
+        size: island.size,
+        resourceNodes: island.resourceNodes.length,
+        heightMapSize: `${island.heightMap.length}x${island.heightMap[0]?.length}`,
+        sampleHeight: island.heightMap[32]?.[32],
+        sampleResource: island.resourceNodes[0]
+      })
+      
       setIsInitialized(true)
     } catch (error) {
       console.error('Failed to initialize game:', error)
@@ -125,20 +134,34 @@ function LoadingScreen() {
   }, [])
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full mx-auto mb-8 animate-spin" />
+    <div className="w-full h-screen relative overflow-hidden">
+      {/* Splash Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/assets/splash.png)' }}
+      />
+      
+      {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/30" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+        {/* Logo */}
+        <div className="mb-8">
+          <img 
+            src="/assets/logo_transparent.png" 
+            alt="Isle Fight You Logo" 
+            className="w-64 md:w-80 h-auto drop-shadow-2xl"
+          />
+        </div>
         
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 text-shadow">
-          🏝️ Isle Fight You
-        </h1>
+        {/* Loading Spinner */}
+        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full mb-8 animate-spin" />
         
-        <p className="text-xl text-blue-200 mb-8">
-          Paradise punches back.
-        </p>
-        
-        <div className="text-white">
-          <div className="animate-pulse text-lg">{loadingText}</div>
+        {/* Loading Text */}
+        <div className="text-white text-center">
+          <div className="animate-pulse text-xl font-semibold mb-2">{loadingText}</div>
+          <div className="text-sm text-blue-200">Paradise punches back...</div>
         </div>
       </div>
     </div>
@@ -150,6 +173,15 @@ function ErrorScreen({ error, onRetry }: { error: string; onRetry: () => void })
   return (
     <div className="w-full h-screen bg-gradient-to-br from-red-900 to-red-700 flex items-center justify-center">
       <div className="text-center max-w-md mx-4">
+        {/* Game Logo */}
+        <div className="mb-6">
+          <img 
+            src="/assets/logo_transparent.png" 
+            alt="Isle Fight You" 
+            className="w-32 h-auto mx-auto drop-shadow-lg"
+          />
+        </div>
+        
         <div className="text-6xl mb-6">⚠️</div>
         <h1 className="text-3xl font-bold text-white mb-4">Oops!</h1>
         <p className="text-red-200 mb-8">{error}</p>

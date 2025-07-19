@@ -11,8 +11,22 @@ export const metadata: Metadata = {
   authors: [{ name: 'Isle Fight You Team' }],
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/assets/icons/isle_fight_you_icon_16_transparent.png', sizes: '16x16', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_32_transparent.png', sizes: '32x32', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_48_transparent.png', sizes: '48x48', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_64_transparent.png', sizes: '64x64', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_96_transparent.png', sizes: '96x96', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_128_transparent.png', sizes: '128x128', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_256_transparent.png', sizes: '256x256', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_512_transparent.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/assets/icons/isle_fight_you_icon_180_transparent.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
 }
 

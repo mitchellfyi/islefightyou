@@ -1,0 +1,79 @@
+{
+  "name": "Isle Fight You - Paradise Punches Back",
+  "short_name": "Isle Fight You",
+  "description": "A browser‑based island builder with guns, coconuts, and enough PvP to ruin even the sunniest holiday. Mobile-first survival and raiding game.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "theme_color": "#0ea5e9",
+  "background_color": "#0f172a",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/icons/isle_fight_you_icon_16_transparent.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_32_transparent.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_48_transparent.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_64_transparent.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_96_transparent.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_128_transparent.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_152_transparent.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_192_transparent.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_256_transparent.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_512_transparent.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/isle_fight_you_icon_1024_transparent.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/splash.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Isle Fight You - Island Survival Game"
+    }
+  ]
+} 

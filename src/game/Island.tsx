@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Island as IslandType, Building, BiomeType, ResourceType } from '@/types/game'
@@ -20,6 +20,16 @@ export function Island({ island, buildings }: IslandProps) {
   const waterRef = useRef<THREE.Mesh>(null)
   const deepWaterRef = useRef<THREE.Mesh>(null)
 
+  // Debug logging
+  console.log('🏝️ Island component rendering with data:', {
+    islandId: island.id,
+    size: island.size,
+    hasHeightMap: !!island.heightMap,
+    heightMapSize: island.heightMap ? `${island.heightMap.length}x${island.heightMap[0]?.length}` : 'none',
+    resourceNodes: island.resourceNodes?.length || 0,
+    buildings: buildings.length
+  })
+
   // Validate terrain on mount (development safety check)
   useMemo(() => {
     const isValid = TerrainUtils.validateTerrain()
@@ -28,51 +38,29 @@ export function Island({ island, buildings }: IslandProps) {
     }
   }, [])
 
-  // Generate robust natural terrain using noise system
-  const terrainMesh = useMemo(() => {
-    try {
-      // Create high-resolution geometry for smooth terrain
-      const geometry = new THREE.PlaneGeometry(
-        TERRAIN_SIZE, 
-        TERRAIN_SIZE, 
-        TERRAIN_RESOLUTION - 1, 
-        TERRAIN_RESOLUTION - 1
-      )
-      
-      // Get vertex data
-      const vertices = geometry.attributes.position.array as Float32Array
-      const colors = new Float32Array(vertices.length)
-      
-      // Generate natural terrain heights and colors
-      for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i]
-        const z = vertices[i + 2]
+  // Generate terrain heights for direct use
+  const terrainHeights = useMemo(() => {
+    console.log('🗺️ Computing realistic island terrain heights...')
+    const size = 33 // For 32x32 plane geometry (needs size+1 vertices)
+    const heights = []
+    
+    for (let i = 0; i < size; i++) {
+      heights[i] = []
+      for (let j = 0; j < size; j++) {
+        // Convert grid coordinates to world coordinates
+        const x = (i - size/2) * (TERRAIN_SIZE / size)
+        const z = (j - size/2) * (TERRAIN_SIZE / size)
         
-        // Get natural height from noise system
+        // Use the actual terrain noise system for realistic terrain
         const height = terrainNoise.islandHeight(x, z)
-        vertices[i + 1] = height // Set Y position
-        
-        // Get biome and color
-        const distanceFromCenter = Math.sqrt(x * x + z * z)
-        const biome = terrainNoise.getBiome(x, z, height, distanceFromCenter)
-        const color = getBiomeColor(biome, height)
-        
-        colors[i] = color.r     // Red channel
-        colors[i + 1] = color.g // Green channel  
-        colors[i + 2] = color.b // Blue channel
+        heights[i][j] = height
       }
-      
-      // Apply colors and compute normals for lighting
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-      geometry.computeVertexNormals()
-      
-      return geometry
-    } catch (error) {
-      console.error('Failed to generate terrain:', error)
-      // Fallback to simple plane if terrain generation fails
-      return new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, 16, 16)
     }
-  }, [])
+    
+    console.log('✅ Realistic terrain heights computed:', heights.length, 'x', heights[0].length)
+    return heights
+  }, [island.id])
+
 
   // Animate water with realistic wave motion
   useFrame((state) => {
@@ -118,29 +106,70 @@ export function Island({ island, buildings }: IslandProps) {
         />
       </mesh>
 
-      {/* Natural Terrain with Noise-Based Generation */}
-      <mesh
-        geometry={terrainMesh}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-        castShadow
-      >
-        <meshLambertMaterial 
-          vertexColors 
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {/* Main Island Terrain */}
+      <TerrainMesh heights={terrainHeights} position={[0, 0, 0]} color="#4a7c59" />
 
       {/* Enhanced Natural Resource Nodes */}
-      {island.resourceNodes.map((node) => (
+      {island.resourceNodes?.map((node) => (
         <NaturalResourceNode key={node.id} node={node} />
-      ))}
+      )) || []}
 
       {/* Natural Buildings */}
       {buildings.map((building) => (
         <NaturalBuilding key={building.id} building={building} />
       ))}
     </group>
+  )
+}
+
+/**
+ * Simple Terrain Mesh Component
+ */
+function TerrainMesh({ heights, position, color }: { 
+  heights: number[][], 
+  position: [number, number, number],
+  color: string 
+}) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  
+  useEffect(() => {
+    if (!meshRef.current) return
+    
+    console.log('🎯 Creating terrain geometry from heights:', heights.length)
+    
+    // Create plane geometry
+    const size = heights.length - 1 // 32x32 segments
+    const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, size, size)
+    const vertices = geometry.attributes.position.array as Float32Array
+    
+    // Apply heights to vertices correctly
+    // PlaneGeometry vertices are ordered from bottom-left to top-right
+    for (let i = 0; i <= size; i++) {
+      for (let j = 0; j <= size; j++) {
+        const vertexIndex = i * (size + 1) + j
+        const heightValue = heights[j][i] // Note: swapped indices for correct orientation
+        vertices[vertexIndex * 3 + 1] = heightValue // Y coordinate (height)
+      }
+    }
+    
+    geometry.attributes.position.needsUpdate = true
+    geometry.computeVertexNormals()
+    
+    meshRef.current.geometry = geometry
+    console.log('✅ Terrain geometry applied to mesh - should look like hills now')
+  }, [heights])
+  
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      rotation={[-Math.PI / 2, 0, 0]}
+      receiveShadow
+      castShadow
+    >
+      <planeGeometry args={[TERRAIN_SIZE, TERRAIN_SIZE, 32, 32]} />
+      <meshLambertMaterial color={color} side={THREE.DoubleSide} />
+    </mesh>
   )
 }
 
@@ -168,6 +197,12 @@ function getBiomeColor(biome: string, height: number): THREE.Color {
     case 'mountain':
       // Rocky grays and browns
       return new THREE.Color(0x78909c).lerp(new THREE.Color(0x90a4ae), heightRatio * 0.6)
+    case 'desert':
+      // Desert sands and rocks
+      return new THREE.Color(0xd2b48c).lerp(new THREE.Color(0xf4a460), heightRatio * 0.4)
+    case 'swamp':
+      // Murky swamp greens and browns
+      return new THREE.Color(0x556b2f).lerp(new THREE.Color(0x8fbc8f), heightRatio * 0.3)
     default:
       return new THREE.Color(0x4caf50)
   }
@@ -311,11 +346,10 @@ function NaturalResourceNode({ node }: { node: IslandType['resourceNodes'][0] })
     }
   }
 
-  // Position resource on terrain surface
-  const terrainHeight = terrainNoise.islandHeight(node.position.x, node.position.z)
+  // Use position from node data (already calculated during generation)
   const finalPosition: [number, number, number] = [
     node.position.x,
-    Math.max(0, terrainHeight),
+    Math.max(0, node.position.y),
     node.position.z
   ]
 
@@ -406,11 +440,10 @@ function NaturalBuilding({ building }: { building: Building }) {
     }
   }
 
-  // Position building on terrain surface  
-  const terrainHeight = terrainNoise.islandHeight(building.position.x, building.position.z)
+  // Use position from building data
   const finalPosition: [number, number, number] = [
     building.position.x,
-    Math.max(0, terrainHeight),
+    Math.max(0, building.position.y || 0),
     building.position.z
   ]
 
@@ -453,8 +486,21 @@ function getBuildingColor(type: string): string {
  * Updated terrain height function using new noise system
  * This is used by the character movement system for terrain following
  */
-export function getTerrainHeightAt(x: number, z: number): number {
+export function getTerrainHeightAt(x: number, z: number, island?: IslandType): number {
   try {
+    if (island?.heightMap && island.heightMap.length > 0) {
+      // Use island heightMap data
+      const mapX = Math.floor((x + TERRAIN_SIZE/2) * (island.size / TERRAIN_SIZE))
+      const mapZ = Math.floor((z + TERRAIN_SIZE/2) * (island.size / TERRAIN_SIZE))
+      
+      const clampedX = Math.max(0, Math.min(island.size - 1, mapX))
+      const clampedZ = Math.max(0, Math.min(island.size - 1, mapZ))
+      
+      const normalizedHeight = island.heightMap[clampedX]?.[clampedZ] || 0
+      return normalizedHeight * 10 - 2 // Scale to match expected height range
+    }
+    
+    // Fallback to noise system
     return terrainNoise.islandHeight(x, z)
   } catch (error) {
     console.error('Failed to get terrain height:', error)

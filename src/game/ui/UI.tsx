@@ -36,8 +36,17 @@ export function UI() {
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Top HUD */}
+      {/* Game Logo */}
       <div className="absolute top-4 left-4 pointer-events-auto">
+        <img 
+          src="/assets/logo_transparent.png" 
+          alt="Isle Fight You" 
+          className="w-16 h-auto drop-shadow-lg"
+        />
+      </div>
+
+      {/* Top HUD */}
+      <div className="absolute top-4 left-20 pointer-events-auto">
         <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4 text-white">
           <div className="flex items-center gap-4">
             {/* Health */}

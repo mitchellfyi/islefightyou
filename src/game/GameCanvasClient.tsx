@@ -147,7 +147,7 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
     if (!player) return
     
     const terrainFollowingInterval = setInterval(() => {
-      const currentHeight = getTerrainHeightAt(player.position.x, player.position.z)
+      const currentHeight = getTerrainHeightAt(player.position.x, player.position.z, currentIsland || undefined)
       let newY = player.position.y
       
       if (isJumping) {
@@ -259,11 +259,18 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
           />
 
           {/* Game Objects */}
-          {currentIsland && (
-            <Island
-              island={currentIsland}
-              buildings={buildings}
-            />
+          {currentIsland ? (
+            <>
+              {console.log('🎮 Rendering Island component', currentIsland.id)}
+              <Island
+                island={currentIsland}
+                buildings={buildings}
+              />
+            </>
+          ) : (
+            <>
+              {console.log('❌ No currentIsland found')}
+            </>
           )}
 
           {player && (
