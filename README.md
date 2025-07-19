@@ -21,12 +21,31 @@ Animal Crossing is lovely until you realise Tom Nook deserves a left hook. Minec
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript
+- **Frontend**: Next.js 15, React 19, TypeScript
 - **3D Engine**: Three.js with React Three Fiber
 - **Database**: Supabase
 - **Real-time**: Socket.io
 - **Hosting**: Vercel
 - **Styling**: Tailwind CSS
+
+## Development Status
+
+**Current Phase:** Phase 1 Foundation (Core Slice)
+
+### ✅ Recently Completed
+- Enhanced character model with natural proportions and animations
+- Smooth natural terrain system replacing blocky voxels  
+- Terrain following mechanics with physics-based jumping
+- Mobile-optimized controls with touch support
+- Performance improvements for low-end devices
+
+### 🔄 Next Priorities
+1. Resource gathering mechanics (trees, rocks, coconuts)
+2. Basic crafting system (campfire, tools)
+3. Survival stats implementation (health, hunger, thirst)
+4. Combat foundation (first weapon prototype)
+
+📋 **[View Complete Development Roadmap](docs/ROADMAP.md)**
 
 ## Quick Start
 

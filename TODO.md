@@ -4,16 +4,23 @@
 
 A browser‑based island builder with guns, coconuts, and enough PvP to ruin even the sunniest holiday.
 
+📋 **[📅 View Development Roadmap](docs/ROADMAP.md)** – Full 5-phase development plan with timelines
+
+**Current Phase:** Phase 1 Foundation (Core Slice) – Focus on essential gameplay loop
+
 ---
 
 ## ✅ **COMPLETED FEATURES**
 
 ### 🎯 **Core Foundation**
-- [x] **Project Setup** - Next.js 14, TypeScript, Tailwind CSS
+- [x] **Project Setup** - Next.js 15, React 19, TypeScript, Tailwind CSS *(Updated Dec 2024)*
 - [x] **Rebranding** - From "Island Conquest" to "Isle Fight You"
 - [x] **Mobile-First Design** - Touch controls, responsive UI, PWA-ready
 - [x] **Supabase Integration** - Database schema and client setup
 - [x] **3D Engine** - Three.js with React Three Fiber
+- [x] **Enhanced Character Model** - Anthropomorphic design with natural animations *(Dec 2024)*
+- [x] **Natural Terrain System** - Smooth heightmap-based terrain replacing blocks *(Dec 2024)*
+- [x] **Terrain Following** - Physics-based character movement with jumping *(Dec 2024)*
 
 ### 🌍 **World & Persistence**
 - [x] **Procedural Generation** - Noise-based 64×64 island generation
