@@ -3,112 +3,157 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { Mesh, PlaneGeometry, MeshLambertMaterial, Color } from 'three'
-import { Island as IslandType, Building, BiomeType } from '@/types/game'
+import { Island as IslandType, Building, BiomeType, ResourceType } from '@/types/game'
 
 interface IslandProps {
   island: IslandType
   buildings: Building[]
 }
 
+// Minecraft-style block system
+const BLOCK_SIZE = 1
+const ISLAND_SIZE = 32 // 32x32 blocks
+const MAX_HEIGHT = 8
+
 export function Island({ island, buildings }: IslandProps) {
-  const meshRef = useRef<Mesh>(null)
+  const waterRef = useRef<THREE.Mesh>(null)
 
-  // Helper function to get biome colors - defined before usage
-  const getBiomeColor = (biome: BiomeType): Color => {
-    switch (biome) {
-      case BiomeType.GRASSLAND:
-        return new Color(0x7cb342)
-      case BiomeType.FOREST:
-        return new Color(0x4caf50)
-      case BiomeType.DESERT:
-        return new Color(0xffb74d)
-      case BiomeType.MOUNTAIN:
-        return new Color(0x78909c)
-      case BiomeType.BEACH:
-        return new Color(0xffc107)
-      case BiomeType.SWAMP:
-        return new Color(0x689f38)
-      default:
-        return new Color(0x7cb342)
-    }
-  }
-
-  // Generate terrain geometry from height map
-  const terrainGeometry = useMemo(() => {
-    const geometry = new PlaneGeometry(
-      island.size,
-      island.size,
-      island.heightMap.length - 1,
-      island.heightMap[0].length - 1
-    )
-
-    const vertices = geometry.attributes.position.array as Float32Array
-    const colors = new Float32Array(vertices.length)
-
-    // Apply height map and biome colors
-    for (let i = 0; i < vertices.length; i += 3) {
-      const x = Math.floor((vertices[i] + island.size / 2) / island.size * island.heightMap.length)
-      const z = Math.floor((vertices[i + 2] + island.size / 2) / island.size * island.heightMap[0].length)
-      
-      const clampedX = Math.max(0, Math.min(island.heightMap.length - 1, x))
-      const clampedZ = Math.max(0, Math.min(island.heightMap[0].length - 1, z))
-      
-      // Set height
-      vertices[i + 1] = island.heightMap[clampedX][clampedZ] * 10
-      
-      // Set biome color
-      const biome = island.biomeMap[clampedX][clampedZ]
-      const color = getBiomeColor(biome)
-      colors[i] = color.r
-      colors[i + 1] = color.g
-      colors[i + 2] = color.b
-    }
-
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    geometry.computeVertexNormals()
+  // Generate simple block-based terrain
+  const terrainBlocks = useMemo(() => {
+    const blocks: JSX.Element[] = []
+    const centerX = ISLAND_SIZE / 2
+    const centerZ = ISLAND_SIZE / 2
     
-    return geometry
-  }, [island, getBiomeColor])
+    for (let x = 0; x < ISLAND_SIZE; x++) {
+      for (let z = 0; z < ISLAND_SIZE; z++) {
+        // Calculate distance from center for circular island shape
+        const distanceFromCenter = Math.sqrt(
+          Math.pow(x - centerX, 2) + Math.pow(z - centerZ, 2)
+        )
+        
+        // Skip blocks too far from center (creates circular island)
+        if (distanceFromCenter > ISLAND_SIZE / 2.5) continue
+        
+        // Calculate height based on distance from center (higher in middle)
+        const normalizedDistance = distanceFromCenter / (ISLAND_SIZE / 2.5)
+        const baseHeight = Math.max(1, Math.floor((1 - normalizedDistance) * MAX_HEIGHT))
+        
+        // Add some noise for variation
+        const noise = Math.sin(x * 0.3) * Math.cos(z * 0.3) * 2
+        const height = Math.max(1, Math.floor(baseHeight + noise))
+        
+        // Create blocks up to the height
+        for (let y = 0; y < height; y++) {
+          const blockType = getBlockType(x, z, y, height, distanceFromCenter)
+          const color = getBlockColor(blockType)
+          
+          const positionX = (x - centerX) * BLOCK_SIZE
+          const positionZ = (z - centerZ) * BLOCK_SIZE
+          const positionY = y * BLOCK_SIZE
+          
+          blocks.push(
+            <TerrainBlock
+              key={`${x}-${y}-${z}`}
+              position={[positionX, positionY, positionZ]}
+              color={color}
+              blockType={blockType}
+            />
+          )
+        }
+      }
+    }
+    
+    return blocks
+  }, [])
+
+  // Animate water
+  useFrame((state) => {
+    if (waterRef.current) {
+      waterRef.current.position.y = -1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1
+    }
+  })
 
   return (
     <group>
-      {/* Terrain Mesh */}
-      <mesh
-        ref={meshRef}
-        geometry={terrainGeometry}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <meshLambertMaterial vertexColors={true} />
+      {/* Large Sea Base */}
+      <mesh position={[0, -2, 0]} receiveShadow>
+        <boxGeometry args={[ISLAND_SIZE * 2, 2, ISLAND_SIZE * 2]} />
+        <meshLambertMaterial color="#1976d2" />
       </mesh>
 
-      {/* Water around the island */}
+      {/* Animated Water Layer */}
       <mesh
-        position={[0, -0.5, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
+        ref={waterRef}
+        position={[0, -1, 0]}
         receiveShadow
       >
-        <planeGeometry args={[island.size * 2, island.size * 2]} />
-        <meshLambertMaterial color="#42a5f5" transparent opacity={0.8} />
+        <boxGeometry args={[ISLAND_SIZE * 1.5, 0.5, ISLAND_SIZE * 1.5]} />
+        <meshLambertMaterial color="#42a5f5" transparent opacity={0.7} />
       </mesh>
+
+      {/* Terrain Blocks */}
+      {terrainBlocks}
 
       {/* Resource Nodes */}
       {island.resourceNodes.map((node) => (
-        <ResourceNode key={node.id} node={node} />
+        <ResourceBlock key={node.id} node={node} />
       ))}
 
       {/* Buildings */}
       {buildings.map((building) => (
-        <BuildingMesh key={building.id} building={building} />
+        <BuildingBlock key={building.id} building={building} />
       ))}
     </group>
   )
 }
 
-// Resource Node Component
-function ResourceNode({ node }: { node: IslandType['resourceNodes'][0] }) {
-  const meshRef = useRef<Mesh>(null)
+// Determine block type based on position and height
+function getBlockType(x: number, z: number, y: number, totalHeight: number, distanceFromCenter: number): string {
+  // Top block determines biome
+  if (y === totalHeight - 1) {
+    if (distanceFromCenter < 3) return 'grass' // Center is grassy
+    if (distanceFromCenter < 8) return 'forest' // Ring of forest
+    if (distanceFromCenter < 12) return 'grass' // More grass
+    return 'sand' // Edges are sandy/beach
+  }
+  
+  // Underground blocks
+  if (y === 0) return 'bedrock' // Bottom layer
+  if (y < totalHeight * 0.3) return 'stone' // Lower layers are stone
+  if (y < totalHeight * 0.7) return 'dirt' // Middle layers are dirt
+  return 'dirt' // Just below surface
+}
+
+// Get color for each block type
+function getBlockColor(blockType: string): string {
+  switch (blockType) {
+    case 'grass': return '#4caf50'
+    case 'forest': return '#2e7d32'
+    case 'sand': return '#ffc107'
+    case 'dirt': return '#8d6e63'
+    case 'stone': return '#78909c'
+    case 'bedrock': return '#424242'
+    default: return '#4caf50'
+  }
+}
+
+// Individual terrain block component
+function TerrainBlock({ position, color, blockType }: {
+  position: [number, number, number]
+  color: string
+  blockType: string
+}) {
+  return (
+    <mesh position={position} castShadow receiveShadow>
+      <boxGeometry args={[BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE]} />
+      <meshLambertMaterial color={color} />
+    </mesh>
+  )
+}
+
+// Resource block component
+function ResourceBlock({ node }: { node: IslandType['resourceNodes'][0] }) {
+  const meshRef = useRef<THREE.Mesh>(null)
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -119,146 +164,74 @@ function ResourceNode({ node }: { node: IslandType['resourceNodes'][0] }) {
 
   const getResourceColor = () => {
     switch (node.type) {
-      case 'wood':
-        return '#8d6e63'
-      case 'stone':
-        return '#78909c'
-      case 'metal':
-        return '#607d8b'
-      case 'coral':
-        return '#ff7043'
-      case 'berries':
-        return '#9c27b0'
-      case 'coconut':
-        return '#795548'
-      case 'crystal':
-        return '#e1bee7'
-      default:
-        return '#795548'
-    }
-  }
-
-  const getResourceGeometry = () => {
-    switch (node.type) {
-      case 'wood':
-        return <cylinderGeometry args={[0.3, 0.5, 2, 8]} />
-      case 'stone':
-        return <dodecahedronGeometry args={[0.8]} />
-      case 'metal':
-        return <octahedronGeometry args={[0.6]} />
-      case 'coral':
-        return <icosahedronGeometry args={[0.7]} />
-      case 'berries':
-        return <sphereGeometry args={[0.4, 8, 6]} />
-      case 'coconut':
-        return <sphereGeometry args={[0.5, 8, 6]} />
-      case 'crystal':
-        return <coneGeometry args={[0.4, 1.5, 6]} />
-      default:
-        return <boxGeometry args={[1, 1, 1]} />
+      case 'wood': return '#8d6e63'
+      case 'stone': return '#78909c'
+      case 'metal': return '#607d8b'
+      case 'coral': return '#ff7043'
+      case 'berries': return '#9c27b0'
+      case 'coconut': return '#795548'
+      case 'crystal': return '#e1bee7'
+      default: return '#795548'
     }
   }
 
   return (
     <mesh
       ref={meshRef}
-      position={[node.position.x, node.position.y, node.position.z]}
+      position={[node.position.x, node.position.y + BLOCK_SIZE, node.position.z]}
       castShadow
     >
-      {getResourceGeometry()}
+      <boxGeometry args={[BLOCK_SIZE * 0.8, BLOCK_SIZE * 1.5, BLOCK_SIZE * 0.8]} />
       <meshLambertMaterial color={getResourceColor()} />
     </mesh>
   )
 }
 
-// Building Component
-function BuildingMesh({ building }: { building: Building }) {
+// Building block component
+function BuildingBlock({ building }: { building: Building }) {
   const getBuildingGeometry = () => {
-    switch (building.type) {
-      case 'island_core':
-        return (
-          <group>
-            <mesh castShadow>
-              <cylinderGeometry args={[2, 2, 3, 8]} />
-              <meshLambertMaterial color="#ffd700" />
-            </mesh>
-            <mesh position={[0, 2, 0]} castShadow>
-              <octahedronGeometry args={[1]} />
-              <meshLambertMaterial color="#ffff00" />
-            </mesh>
-          </group>
-        )
-      case 'house':
-        return (
-          <group>
-            <mesh castShadow>
-              <boxGeometry args={[2, 2, 2]} />
-              <meshLambertMaterial color="#8d6e63" />
-            </mesh>
-            <mesh position={[0, 1.5, 0]} castShadow>
-              <coneGeometry args={[1.5, 1, 4]} />
-              <meshLambertMaterial color="#d32f2f" />
-            </mesh>
-          </group>
-        )
-      case 'workshop':
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[3, 2.5, 3]} />
-            <meshLambertMaterial color="#607d8b" />
-          </mesh>
-        )
-      case 'farm':
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[4, 1, 4]} />
-            <meshLambertMaterial color="#8bc34a" />
-          </mesh>
-        )
-      case 'fishing_hut':
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[2, 2, 3]} />
-            <meshLambertMaterial color="#42a5f5" />
-          </mesh>
-        )
-      case 'turret':
-        return (
-          <mesh castShadow>
-            <cylinderGeometry args={[1, 1.5, 4, 8]} />
-            <meshLambertMaterial color="#424242" />
-          </mesh>
-        )
-      case 'wall':
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[1, 3, 0.5]} />
-            <meshLambertMaterial color="#757575" />
-          </mesh>
-        )
-      case 'storage':
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[3, 2, 3]} />
-            <meshLambertMaterial color="#5d4037" />
-          </mesh>
-        )
-      default:
-        return (
-          <mesh castShadow>
-            <boxGeometry args={[2, 2, 2]} />
-            <meshLambertMaterial color="#795548" />
-          </mesh>
-        )
-    }
+    const height = getBuildingHeight(building.type)
+    const color = getBuildingColor(building.type)
+    
+    return (
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[BLOCK_SIZE * 2, height, BLOCK_SIZE * 2]} />
+        <meshLambertMaterial color={color} />
+      </mesh>
+    )
   }
 
   return (
-    <group
-      position={[building.position.x, building.position.y, building.position.z]}
-      rotation={[building.rotation.x, building.rotation.y, building.rotation.z]}
-    >
+    <group position={[building.position.x, building.position.y, building.position.z]}>
       {getBuildingGeometry()}
     </group>
   )
+}
+
+function getBuildingHeight(type: string): number {
+  switch (type) {
+    case 'island_core': return BLOCK_SIZE * 4
+    case 'house': return BLOCK_SIZE * 3
+    case 'workshop': return BLOCK_SIZE * 3
+    case 'farm': return BLOCK_SIZE * 1.5
+    case 'fishing_hut': return BLOCK_SIZE * 2.5
+    case 'turret': return BLOCK_SIZE * 5
+    case 'wall': return BLOCK_SIZE * 4
+    case 'storage': return BLOCK_SIZE * 2.5
+    default: return BLOCK_SIZE * 2
+  }
+}
+
+function getBuildingColor(type: string): string {
+  switch (type) {
+    case 'island_core': return '#ffd700'
+    case 'house': return '#8d6e63'
+    case 'workshop': return '#607d8b'
+    case 'farm': return '#8bc34a'
+    case 'fishing_hut': return '#42a5f5'
+    case 'turret': return '#424242'
+    case 'wall': return '#757575'
+    case 'storage': return '#5d4037'
+    default: return '#795548'
+  }
 } 

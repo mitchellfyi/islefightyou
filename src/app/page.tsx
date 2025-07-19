@@ -44,7 +44,7 @@ export default function GamePage() {
         level: 1,
         experience: 0,
         survival: SurvivalManager.createDefaultStats(),
-        position: { x: 0, y: 5, z: 0 },
+        position: { x: 0, y: 4, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         inventory: [],
         weapons: [],

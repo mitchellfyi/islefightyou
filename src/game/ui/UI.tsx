@@ -258,6 +258,18 @@ export function UI() {
           </div>
         </div>
       )}
+
+      {/* Control Instructions */}
+      <div className="hidden md:block absolute bottom-4 left-4 pointer-events-auto">
+        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white text-sm">
+          <h3 className="font-bold mb-2">🎮 Controls</h3>
+          <div className="space-y-1">
+            <div>⌨️ WASD / Arrow Keys: Move</div>
+            <div>🔄 Mouse Wheel: Zoom in/out</div>
+            <div>📱 Touch: Use on-screen controls</div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

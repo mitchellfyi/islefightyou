@@ -2,7 +2,9 @@
 
 import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { Billboard, Text } from '@react-three/drei'
 import { Mesh, Vector3 } from 'three'
+import * as THREE from 'three'
 import { Player as PlayerType } from '@/types/game'
 
 interface PlayerProps {
@@ -12,30 +14,22 @@ interface PlayerProps {
 
 export function Player({ player, onMove }: PlayerProps) {
   const meshRef = useRef<Mesh>(null)
-  const targetPosition = useRef(new Vector3(player.position.x, player.position.y, player.position.z))
 
-  // Smooth movement animation
-  useFrame((state, delta) => {
+  // Simple bobbing animation
+  useFrame((state) => {
     if (meshRef.current) {
-      // Smooth interpolation to target position
-      meshRef.current.position.lerp(targetPosition.current, delta * 10)
-      
       // Gentle bobbing animation when idle
       const idleMovement = Math.sin(state.clock.elapsedTime * 4) * 0.05
-      meshRef.current.position.y = player.position.y + idleMovement
+      meshRef.current.position.y = player.position.y + 1 + idleMovement
     }
   })
 
-  useEffect(() => {
-    targetPosition.current.set(player.position.x, player.position.y, player.position.z)
-  }, [player.position])
-
   return (
-    <group>
+    <group position={[player.position.x, player.position.y, player.position.z]}>
       {/* Player Character */}
       <mesh
         ref={meshRef}
-        position={[player.position.x, player.position.y + 1, player.position.z]}
+        position={[0, 1, 0]}
         castShadow
       >
         {/* Body */}
@@ -45,7 +39,7 @@ export function Player({ player, onMove }: PlayerProps) {
 
       {/* Head */}
       <mesh
-        position={[player.position.x, player.position.y + 2, player.position.z]}
+        position={[0, 2, 0]}
         castShadow
       >
         <sphereGeometry args={[0.4, 8, 8]} />
@@ -56,13 +50,13 @@ export function Player({ player, onMove }: PlayerProps) {
       <HealthBar 
         health={player.survival.health} 
         maxHealth={player.survival.maxHealth} 
-        position={[player.position.x, player.position.y + 3, player.position.z]}
+        position={[0, 3, 0]}
       />
 
       {/* Name Tag */}
       <NameTag 
         name={player.username} 
-        position={[player.position.x, player.position.y + 3.5, player.position.z]}
+        position={[0, 3.5, 0]}
       />
     </group>
   )
@@ -77,21 +71,23 @@ function HealthBar({ health, maxHealth, position }: {
   const healthPercentage = health / maxHealth
 
   return (
-    <group position={position}>
-      {/* Background */}
-      <mesh>
-        <planeGeometry args={[1, 0.1]} />
-        <meshBasicMaterial color="#333333" />
-      </mesh>
-      
-      {/* Health Fill */}
-      <mesh position={[-(1 - healthPercentage) / 2, 0, 0.01]}>
-        <planeGeometry args={[healthPercentage, 0.08]} />
-        <meshBasicMaterial 
-          color={healthPercentage > 0.5 ? "#4caf50" : healthPercentage > 0.25 ? "#ff9800" : "#f44336"} 
-        />
-      </mesh>
-    </group>
+    <Billboard position={position}>
+      <group>
+        {/* Background */}
+        <mesh>
+          <planeGeometry args={[1, 0.1]} />
+          <meshBasicMaterial color="#333333" />
+        </mesh>
+        
+        {/* Health Fill */}
+        <mesh position={[-(1 - healthPercentage) / 2, 0, 0.01]}>
+          <planeGeometry args={[healthPercentage, 0.08]} />
+          <meshBasicMaterial 
+            color={healthPercentage > 0.5 ? "#4caf50" : healthPercentage > 0.25 ? "#ff9800" : "#f44336"} 
+          />
+        </mesh>
+      </group>
+    </Billboard>
   )
 }
 
@@ -101,19 +97,25 @@ function NameTag({ name, position }: {
   position: [number, number, number]
 }) {
   return (
-    <group position={position}>
-      {/* Background */}
-      <mesh>
-        <planeGeometry args={[name.length * 0.15, 0.3]} />
-        <meshBasicMaterial color="#000000" opacity={0.7} transparent />
-      </mesh>
-      
-      {/* This would typically use Text from @react-three/drei for actual text rendering */}
-      {/* For now, we'll use a simple colored plane as placeholder */}
-      <mesh position={[0, 0, 0.01]}>
-        <planeGeometry args={[name.length * 0.12, 0.2]} />
-        <meshBasicMaterial color="#ffffff" />
-      </mesh>
-    </group>
+    <Billboard position={position}>
+      <group>
+        {/* Background */}
+        <mesh>
+          <planeGeometry args={[name.length * 0.15, 0.3]} />
+          <meshBasicMaterial color="#000000" opacity={0.7} transparent />
+        </mesh>
+        
+        {/* Actual Text */}
+        <Text
+          position={[0, 0, 0.01]}
+          fontSize={0.15}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          {name}
+        </Text>
+      </group>
+    </Billboard>
   )
 } 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -9,18 +9,19 @@ export const metadata: Metadata = {
   description: 'A browser‑based island builder with guns, coconuts, and enough PvP to ruin even the sunniest holiday. Mobile-first survival and raiding game.',
   keywords: 'game, multiplayer, survival, island, pvp, browser game, raiding, guns, combat',
   authors: [{ name: 'Isle Fight You Team' }],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: '#0ea5e9',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0ea5e9',
 }
 
 export default function RootLayout({
