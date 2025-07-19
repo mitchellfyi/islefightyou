@@ -127,37 +127,19 @@ function LoadingScreen() {
   return (
     <div className="w-full h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
       <div className="text-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-white border-t-transparent rounded-full mx-auto mb-8"
-        />
+        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full mx-auto mb-8 animate-spin" />
         
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-6xl font-bold text-white mb-4 text-shadow"
-        >
+        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 text-shadow">
           🏝️ Isle Fight You
-        </motion.h1>
+        </h1>
         
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-xl text-blue-200 mb-8"
-        >
+        <p className="text-xl text-blue-200 mb-8">
           Paradise punches back.
-        </motion.p>
+        </p>
         
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-white"
-        >
+        <div className="text-white">
           <div className="animate-pulse text-lg">{loadingText}</div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )
@@ -171,14 +153,12 @@ function ErrorScreen({ error, onRetry }: { error: string; onRetry: () => void })
         <div className="text-6xl mb-6">⚠️</div>
         <h1 className="text-3xl font-bold text-white mb-4">Oops!</h1>
         <p className="text-red-200 mb-8">{error}</p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={onRetry}
-          className="px-8 py-3 bg-white text-red-900 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+          className="px-8 py-3 bg-white text-red-900 rounded-lg font-semibold hover:bg-red-50 transition-colors hover:scale-105"
         >
           Try Again
-        </motion.button>
+        </button>
       </div>
     </div>
   )

@@ -14,7 +14,7 @@ export function TouchControls({ onMove, onAction, onJump }: TouchControlsProps) 
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 })
   const [isJoystickActive, setIsJoystickActive] = useState(false)
   const joystickRef = useRef<HTMLDivElement>(null)
-  const moveIntervalRef = useRef<NodeJS.Timeout>()
+  const moveIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const joystickRadius = 50
   const moveSpeed = 0.1

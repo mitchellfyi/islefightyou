@@ -17,9 +17,9 @@ export function Inventory({ onClose }: InventoryProps) {
       case ResourceType.WOOD: return '🪵'
       case ResourceType.STONE: return '🪨'
       case ResourceType.METAL: return '⚙️'
-      case ResourceType.FOOD: return '🍎'
-      case ResourceType.WATER: return '💧'
-      case ResourceType.COAL: return '🪨'
+      case ResourceType.BERRIES: return '🍎'
+      case ResourceType.COCONUT: return '🥥'
+      case ResourceType.CORAL: return '🪨'
       case ResourceType.CRYSTAL: return '💎'
       default: return '📦'
     }
