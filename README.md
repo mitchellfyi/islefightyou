@@ -1,15 +1,23 @@
-# Island Conquest 🏝️⚔️
+# Isle Fight You 🏝️🔫
 
-A multiplayer Animal Crossing-style survival game with PvP elements, procedural island generation, and real-time combat against AI enemies.
+Paradise punches back.
+
+A browser‑based island builder with guns, coconuts, and enough PvP to ruin even the sunniest holiday. Runs in WebGL, hosted on Vercel, backed by Supabase. Built for mobile first but plays fine on your 34‑inch ultrawide if you must.
+
+## Why This Exists
+
+Animal Crossing is lovely until you realise Tom Nook deserves a left hook. Minecraft is great but you can't board someone else's boat and steal their iron. Isle Fight You fixes these grave design flaws while still letting you potter about planting palm trees.
 
 ## Features
 
-- 🌍 **Procedural Island Generation** - Minecraft-style dynamic world generation
-- 🏗️ **Building & Crafting** - Gather resources and build structures on your island
-- ⚔️ **PvP Combat** - Battle other players in real-time
-- 🤖 **AI Enemies** - Defend against threats from air, sea, and underground
-- 📱 **Mobile Optimized** - Touch-friendly controls for mobile browsers
-- 🚀 **Real-time Multiplayer** - Socket.io powered multiplayer experience
+- 🏝️ **Procedural Islands** - Each player gets a deterministic 64×64‑chunk atoll
+- 🔫 **PvP Raids (opt‑in)** - Sail to any online player, nick their Island Core, escape
+- 🦅 **AI Threats** - Seagull dive‑bombs, pirate skiffs, burrowing crabs
+- 🔫 **Firearms** - Four tiers from Rusty Revolver to Tesla Harpoon
+- 💀 **Survival Stats** - Health, Hunger, Thirst, Bleed that tick while offline
+- 🏚️ **Light Decay** - Blocks lose 0.5% HP per real‑world day
+- 💰 **Two‑tier Economy** - Gold for necessities, Pearls for cosmetics
+- 📱 **Mobile First** - Touch joystick, tap‑to‑shoot, swipe build wheel
 
 ## Tech Stack
 

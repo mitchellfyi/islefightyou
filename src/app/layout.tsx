@@ -1,26 +1,27 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Island Conquest - Multiplayer Survival Game',
-  description: 'A multiplayer Animal Crossing-style survival game with PvP elements, procedural island generation, and real-time combat.',
-  keywords: 'game, multiplayer, survival, island, pvp, browser game, animal crossing',
-  authors: [{ name: 'Island Conquest Team' }],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: '#0ea5e9',
+  title: 'Isle Fight You - Paradise Punches Back',
+  description: 'A browser‑based island builder with guns, coconuts, and enough PvP to ruin even the sunniest holiday. Mobile-first survival and raiding game.',
+  keywords: 'game, multiplayer, survival, island, pvp, browser game, raiding, guns, combat',
+  authors: [{ name: 'Isle Fight You Team' }],
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0ea5e9',
 }
 
 export default function RootLayout({
