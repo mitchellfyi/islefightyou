@@ -2,6 +2,7 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { Mesh, PlaneGeometry, MeshLambertMaterial, Color } from 'three'
 import { Island as IslandType, Building, BiomeType } from '@/types/game'
 
@@ -12,6 +13,26 @@ interface IslandProps {
 
 export function Island({ island, buildings }: IslandProps) {
   const meshRef = useRef<Mesh>(null)
+
+  // Helper function to get biome colors - defined before usage
+  const getBiomeColor = (biome: BiomeType): Color => {
+    switch (biome) {
+      case BiomeType.GRASSLAND:
+        return new Color(0x7cb342)
+      case BiomeType.FOREST:
+        return new Color(0x4caf50)
+      case BiomeType.DESERT:
+        return new Color(0xffb74d)
+      case BiomeType.MOUNTAIN:
+        return new Color(0x78909c)
+      case BiomeType.BEACH:
+        return new Color(0xffc107)
+      case BiomeType.SWAMP:
+        return new Color(0x689f38)
+      default:
+        return new Color(0x7cb342)
+    }
+  }
 
   // Generate terrain geometry from height map
   const terrainGeometry = useMemo(() => {
@@ -48,26 +69,7 @@ export function Island({ island, buildings }: IslandProps) {
     geometry.computeVertexNormals()
     
     return geometry
-  }, [island])
-
-  const getBiomeColor = (biome: BiomeType): Color => {
-    switch (biome) {
-      case BiomeType.GRASSLAND:
-        return new Color(0x7cb342)
-      case BiomeType.FOREST:
-        return new Color(0x4caf50)
-      case BiomeType.DESERT:
-        return new Color(0xffb74d)
-      case BiomeType.MOUNTAIN:
-        return new Color(0x78909c)
-      case BiomeType.BEACH:
-        return new Color(0xffc107)
-      case BiomeType.SWAMP:
-        return new Color(0x689f38)
-      default:
-        return new Color(0x7cb342)
-    }
-  }
+  }, [island, getBiomeColor])
 
   return (
     <group>
@@ -123,6 +125,12 @@ function ResourceNode({ node }: { node: IslandType['resourceNodes'][0] }) {
         return '#78909c'
       case 'metal':
         return '#607d8b'
+      case 'coral':
+        return '#ff7043'
+      case 'berries':
+        return '#9c27b0'
+      case 'coconut':
+        return '#795548'
       case 'crystal':
         return '#e1bee7'
       default:
@@ -138,6 +146,12 @@ function ResourceNode({ node }: { node: IslandType['resourceNodes'][0] }) {
         return <dodecahedronGeometry args={[0.8]} />
       case 'metal':
         return <octahedronGeometry args={[0.6]} />
+      case 'coral':
+        return <icosahedronGeometry args={[0.7]} />
+      case 'berries':
+        return <sphereGeometry args={[0.4, 8, 6]} />
+      case 'coconut':
+        return <sphereGeometry args={[0.5, 8, 6]} />
       case 'crystal':
         return <coneGeometry args={[0.4, 1.5, 6]} />
       default:
@@ -161,6 +175,19 @@ function ResourceNode({ node }: { node: IslandType['resourceNodes'][0] }) {
 function BuildingMesh({ building }: { building: Building }) {
   const getBuildingGeometry = () => {
     switch (building.type) {
+      case 'island_core':
+        return (
+          <group>
+            <mesh castShadow>
+              <cylinderGeometry args={[2, 2, 3, 8]} />
+              <meshLambertMaterial color="#ffd700" />
+            </mesh>
+            <mesh position={[0, 2, 0]} castShadow>
+              <octahedronGeometry args={[1]} />
+              <meshLambertMaterial color="#ffff00" />
+            </mesh>
+          </group>
+        )
       case 'house':
         return (
           <group>
@@ -188,11 +215,32 @@ function BuildingMesh({ building }: { building: Building }) {
             <meshLambertMaterial color="#8bc34a" />
           </mesh>
         )
-      case 'defense_tower':
+      case 'fishing_hut':
+        return (
+          <mesh castShadow>
+            <boxGeometry args={[2, 2, 3]} />
+            <meshLambertMaterial color="#42a5f5" />
+          </mesh>
+        )
+      case 'turret':
         return (
           <mesh castShadow>
             <cylinderGeometry args={[1, 1.5, 4, 8]} />
             <meshLambertMaterial color="#424242" />
+          </mesh>
+        )
+      case 'wall':
+        return (
+          <mesh castShadow>
+            <boxGeometry args={[1, 3, 0.5]} />
+            <meshLambertMaterial color="#757575" />
+          </mesh>
+        )
+      case 'storage':
+        return (
+          <mesh castShadow>
+            <boxGeometry args={[3, 2, 3]} />
+            <meshLambertMaterial color="#5d4037" />
           </mesh>
         )
       default:

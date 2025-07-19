@@ -10,7 +10,7 @@ interface InventoryProps {
 }
 
 export function Inventory({ onClose }: InventoryProps) {
-  const { gameState, consumeItem } = useGameStore()
+  const { inventory, consumeItem } = useGameStore()
 
   const getResourceIcon = (type: ResourceType): string => {
     switch (type) {
@@ -90,17 +90,17 @@ export function Inventory({ onClose }: InventoryProps) {
           </button>
         </div>
 
-        {/* Content */}
+                {/* Content */}
         <div className="p-6">
-          {gameState.inventory.length === 0 ? (
+          {inventory.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="text-6xl mb-4">🎒</div>
               <p className="text-lg">Your inventory is empty</p>
               <p className="text-sm">Gather resources to fill your inventory!</p>
             </div>
           ) : (
-                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-               {gameState.inventory.map((resource, index) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {inventory.map((resource, index) => (
                  <motion.div
                    key={`${resource.type}-${index}`}
                    whileHover={{ scale: 1.05 }}
@@ -139,8 +139,8 @@ export function Inventory({ onClose }: InventoryProps) {
         {/* Footer */}
         <div className="p-6 border-t bg-gray-50">
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Total Items: {gameState.inventory.reduce((sum, item) => sum + item.quantity, 0)}</span>
-            <span>Inventory Slots: {gameState.inventory.length}/50</span>
+            <span>Total Items: {inventory.reduce((sum, item) => sum + item.quantity, 0)}</span>
+            <span>Inventory Slots: {inventory.length}/50</span>
           </div>
         </div>
       </motion.div>

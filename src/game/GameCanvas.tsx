@@ -16,7 +16,15 @@ interface GameCanvasProps {
 
 export function GameCanvas({ className = '' }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { gameState, updatePlayerPosition, consumeItem, applyDamage } = useGameStore()
+  const { 
+    player,
+    currentIsland,
+    buildings,
+    inventory,
+    updatePlayerPosition, 
+    consumeItem, 
+    applyDamage 
+  } = useGameStore()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -31,11 +39,11 @@ export function GameCanvas({ className = '' }: GameCanvasProps) {
   }, [])
 
   const handlePlayerMove = (direction: Vector3) => {
-    if (gameState.player) {
+    if (player) {
       const newPosition = {
-        x: gameState.player.position.x + direction.x,
-        y: gameState.player.position.y + direction.y,
-        z: gameState.player.position.z + direction.z
+        x: player.position.x + direction.x,
+        y: player.position.y + direction.y,
+        z: player.position.z + direction.z
       }
       updatePlayerPosition(newPosition)
     }
@@ -88,16 +96,16 @@ export function GameCanvas({ className = '' }: GameCanvasProps) {
           />
 
           {/* Game Objects */}
-          {gameState.currentIsland && (
+          {currentIsland && (
             <Island
-              island={gameState.currentIsland}
-              buildings={gameState.buildings}
+              island={currentIsland}
+              buildings={buildings}
             />
           )}
 
-          {gameState.player && (
+          {player && (
             <Player
-              player={gameState.player}
+              player={player}
               onMove={handlePlayerMove}
             />
           )}
@@ -133,11 +141,11 @@ export function GameCanvas({ className = '' }: GameCanvasProps) {
                 break
               case 'heal':
                 // Try to consume a healing item
-                if (gameState.inventory.find(item => item.type === ResourceType.FIRST_AID_KIT)) {
+                if (inventory.find(item => item.type === ResourceType.FIRST_AID_KIT)) {
                   consumeItem(ResourceType.FIRST_AID_KIT)
-                } else if (gameState.inventory.find(item => item.type === ResourceType.BANDAGE)) {
+                } else if (inventory.find(item => item.type === ResourceType.BANDAGE)) {
                   consumeItem(ResourceType.BANDAGE)
-                } else if (gameState.inventory.find(item => item.type === ResourceType.COOKED_FISH)) {
+                } else if (inventory.find(item => item.type === ResourceType.COOKED_FISH)) {
                   consumeItem(ResourceType.COOKED_FISH)
                 }
                 break

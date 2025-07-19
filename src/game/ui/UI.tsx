@@ -9,7 +9,14 @@ import { Settings } from './Settings'
 import { BuildMenu } from './BuildMenu'
 
 export function UI() {
-  const { gameState } = useGameStore()
+  const { 
+    player,
+    inventory,
+    isLoading,
+    error,
+    multiplayerState,
+    setError
+  } = useGameStore()
   const [activePanel, setActivePanel] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
 
@@ -19,13 +26,13 @@ export function UI() {
 
   // Update survival warnings
   useEffect(() => {
-    if (gameState.player) {
-      const newWarnings = SurvivalManager.getWarnings(gameState.player.survival)
+    if (player) {
+      const newWarnings = SurvivalManager.getWarnings(player.survival)
       setWarnings(newWarnings)
     }
-  }, [gameState.player?.survival])
+  }, [player?.survival])
 
-  if (!gameState.player) return null
+  if (!player) return null
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -39,10 +46,10 @@ export function UI() {
               <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-red-500 transition-all duration-300"
-                  style={{ width: `${(gameState.player.survival.health / gameState.player.survival.maxHealth) * 100}%` }}
+                  style={{ width: `${(player.survival.health / player.survival.maxHealth) * 100}%` }}
                 />
               </div>
-              <span className="text-xs">{Math.round(gameState.player.survival.health)}/{gameState.player.survival.maxHealth}</span>
+              <span className="text-xs">{Math.round(player.survival.health)}/{player.survival.maxHealth}</span>
             </div>
 
             {/* Hunger */}
@@ -51,10 +58,10 @@ export function UI() {
               <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-orange-500 transition-all duration-300"
-                  style={{ width: `${(gameState.player.survival.hunger / gameState.player.survival.maxHunger) * 100}%` }}
+                  style={{ width: `${(player.survival.hunger / player.survival.maxHunger) * 100}%` }}
                 />
               </div>
-              <span className="text-xs">{Math.round(gameState.player.survival.hunger)}</span>
+              <span className="text-xs">{Math.round(player.survival.hunger)}</span>
             </div>
 
             {/* Thirst */}
@@ -63,30 +70,30 @@ export function UI() {
               <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 transition-all duration-300"
-                  style={{ width: `${(gameState.player.survival.thirst / gameState.player.survival.maxThirst) * 100}%` }}
+                  style={{ width: `${(player.survival.thirst / player.survival.maxThirst) * 100}%` }}
                 />
               </div>
-              <span className="text-xs">{Math.round(gameState.player.survival.thirst)}</span>
+              <span className="text-xs">{Math.round(player.survival.thirst)}</span>
             </div>
 
             {/* Bleed Status */}
-            {gameState.player.survival.bleed > 0 && (
+            {player.survival.bleed > 0 && (
               <div className="flex items-center gap-2">
                 <span>🩸</span>
-                <span className="text-xs text-red-400">x{gameState.player.survival.bleed}</span>
+                <span className="text-xs text-red-400">x{player.survival.bleed}</span>
               </div>
             )}
 
             {/* Level */}
             <div className="flex items-center gap-2">
               <span>⭐</span>
-              <span className="text-sm">Lv.{gameState.player.level}</span>
+              <span className="text-sm">Lv.{player.level}</span>
             </div>
 
             {/* Experience */}
             <div className="flex items-center gap-2">
               <span>📈</span>
-              <span className="text-xs">{gameState.player.experience} XP</span>
+              <span className="text-xs">{player.experience} XP</span>
             </div>
           </div>
         </div>
@@ -99,17 +106,17 @@ export function UI() {
           <div className="flex items-center gap-3 text-sm">
             <div className="flex items-center gap-1">
               <span>💰</span>
-              <span>{gameState.player.economy.gold}</span>
+              <span>{player.economy.gold}</span>
             </div>
             <div className="flex items-center gap-1">
               <span>💎</span>
-              <span>{gameState.player.economy.pearls}</span>
+              <span>{player.economy.pearls}</span>
             </div>
           </div>
           
           {/* Resources */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {gameState.inventory.slice(0, 6).map((resource) => (
+            {inventory.slice(0, 6).map((resource) => (
               <div key={resource.type} className="flex items-center gap-1">
                 <span>{getResourceIcon(resource.type)}</span>
                 <span>{resource.quantity}</span>
@@ -120,15 +127,15 @@ export function UI() {
       </div>
 
       {/* Multiplayer Status */}
-      {gameState.multiplayerState.connectedPlayers.length > 0 && (
+      {multiplayerState.connectedPlayers.length > 0 && (
         <div className="absolute top-20 right-4 pointer-events-auto">
           <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white">
             <div className="text-xs mb-2">Players Online</div>
             <div className="space-y-1">
-              {gameState.multiplayerState.connectedPlayers.slice(0, 5).map((player) => (
-                <div key={player.id} className="flex items-center gap-2 text-xs">
+              {multiplayerState.connectedPlayers.slice(0, 5).map((connectedPlayer) => (
+                <div key={connectedPlayer.id} className="flex items-center gap-2 text-xs">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span>{player.username}</span>
+                  <span>{connectedPlayer.username}</span>
                 </div>
               ))}
             </div>
@@ -213,7 +220,7 @@ export function UI() {
       </AnimatePresence>
 
       {/* Loading Overlay */}
-      {gameState.isLoading && (
+      {isLoading && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-auto">
           <div className="bg-white rounded-lg p-8 text-center">
             <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
@@ -237,13 +244,13 @@ export function UI() {
       )}
 
       {/* Error Message */}
-      {gameState.error && (
+      {error && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
           <div className="bg-red-500 text-white rounded-lg p-4 max-w-md">
             <h3 className="font-bold mb-2">Error</h3>
-            <p>{gameState.error}</p>
+            <p>{error}</p>
             <button
-              onClick={() => useGameStore.getState().setError(null)}
+              onClick={() => setError(null)}
               className="mt-2 px-4 py-2 bg-red-600 rounded hover:bg-red-700"
             >
               Dismiss

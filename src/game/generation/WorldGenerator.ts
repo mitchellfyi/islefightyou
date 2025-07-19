@@ -197,7 +197,7 @@ export class WorldGenerator {
     switch (biome) {
       case BiomeType.FOREST:
         return resourceNoise > 0.8 ? ResourceType.WOOD : 
-               resourceNoise > 0.6 ? ResourceType.FOOD : null
+               resourceNoise > 0.6 ? ResourceType.BERRIES : null
                
       case BiomeType.MOUNTAIN:
         return resourceNoise > 0.7 ? ResourceType.STONE :
@@ -209,15 +209,16 @@ export class WorldGenerator {
                resourceNoise > 0.95 ? ResourceType.CRYSTAL : null
                
       case BiomeType.GRASSLAND:
-        return resourceNoise > 0.7 ? ResourceType.FOOD :
+        return resourceNoise > 0.7 ? ResourceType.BERRIES :
                resourceNoise > 0.9 ? ResourceType.WOOD : null
                
       case BiomeType.SWAMP:
-        return resourceNoise > 0.8 ? ResourceType.WATER :
-               resourceNoise > 0.9 ? ResourceType.COAL : null
+        return resourceNoise > 0.8 ? ResourceType.COCONUT :
+               resourceNoise > 0.9 ? ResourceType.CORAL : null
                
       case BiomeType.BEACH:
-        return resourceNoise > 0.9 ? ResourceType.STONE : null
+        return resourceNoise > 0.8 ? ResourceType.COCONUT :
+               resourceNoise > 0.9 ? ResourceType.CORAL : null
         
       default:
         return null
@@ -232,11 +233,11 @@ export class WorldGenerator {
         return Math.floor(Math.random() * 8) + 3 // 3-11
       case ResourceType.METAL:
         return Math.floor(Math.random() * 5) + 2 // 2-7
-      case ResourceType.FOOD:
+      case ResourceType.CORAL:
         return Math.floor(Math.random() * 6) + 3 // 3-9
-      case ResourceType.WATER:
-        return Math.floor(Math.random() * 12) + 8 // 8-20
-      case ResourceType.COAL:
+      case ResourceType.BERRIES:
+        return Math.floor(Math.random() * 8) + 4 // 4-12
+      case ResourceType.COCONUT:
         return Math.floor(Math.random() * 6) + 2 // 2-8
       case ResourceType.CRYSTAL:
         return Math.floor(Math.random() * 3) + 1 // 1-4
@@ -254,12 +255,12 @@ export class WorldGenerator {
         return 15
       case ResourceType.METAL:
         return 30
-      case ResourceType.FOOD:
+      case ResourceType.CORAL:
+        return 12
+      case ResourceType.BERRIES:
         return 5
-      case ResourceType.WATER:
-        return 3
-      case ResourceType.COAL:
-        return 20
+      case ResourceType.COCONUT:
+        return 8
       case ResourceType.CRYSTAL:
         return 60
       default:

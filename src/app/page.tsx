@@ -10,7 +10,11 @@ import { motion } from 'framer-motion'
 
 export default function GamePage() {
   const { 
-    gameState, 
+    player,
+    currentIsland,
+    inventory,
+    isLoading,
+    error,
     setPlayer, 
     setCurrentIsland, 
     addResource, 
@@ -84,12 +88,12 @@ export default function GamePage() {
     }
   }
 
-  if (!isInitialized || gameState.isLoading) {
+  if (!isInitialized || isLoading) {
     return <LoadingScreen />
   }
 
-  if (gameState.error) {
-    return <ErrorScreen error={gameState.error} onRetry={initializeGame} />
+  if (error) {
+    return <ErrorScreen error={error} onRetry={initializeGame} />
   }
 
   return (
