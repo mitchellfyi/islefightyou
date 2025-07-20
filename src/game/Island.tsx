@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Island as IslandType, Building, BiomeType, ResourceType } from '@/types/game'
 import { terrainNoise, TerrainUtils } from './utils/noise'
+import { VisualTestTerrain, getVisualTestHeight } from './VisualTest'
 
 interface IslandProps {
   island: IslandType
@@ -54,6 +55,11 @@ export function Island({ island, buildings }: IslandProps) {
         // Use the actual terrain noise system for realistic terrain
         const height = terrainNoise.islandHeight(x, z)
         heights[i][j] = height
+        
+        // Debug center point terrain height
+        if (i === Math.floor(size/2) && j === Math.floor(size/2)) {
+          console.log('🗻 Visual terrain center height:', height.toFixed(2), 'at position', x.toFixed(1), z.toFixed(1))
+        }
       }
     }
     
@@ -106,8 +112,8 @@ export function Island({ island, buildings }: IslandProps) {
         />
       </mesh>
 
-      {/* Main Island Terrain */}
-      <TerrainMesh heights={terrainHeights} position={[0, 0, 0]} color="#4a7c59" />
+      {/* VISUAL TEST MODE: Simple geometric shapes for precise testing */}
+      <VisualTestTerrain />
 
       {/* Enhanced Natural Resource Nodes */}
       {island.resourceNodes?.map((node) => (
@@ -487,24 +493,17 @@ function getBuildingColor(type: string): string {
  * This is used by the character movement system for terrain following
  */
 export function getTerrainHeightAt(x: number, z: number, island?: IslandType): number {
+  // VISUAL TEST MODE: Use fixed height for testing
+  return getVisualTestHeight(x, z)
+  
+  /* TODO: Restore original after testing
   try {
-    if (island?.heightMap && island.heightMap.length > 0) {
-      // Use island heightMap data
-      const mapX = Math.floor((x + TERRAIN_SIZE/2) * (island.size / TERRAIN_SIZE))
-      const mapZ = Math.floor((z + TERRAIN_SIZE/2) * (island.size / TERRAIN_SIZE))
-      
-      const clampedX = Math.max(0, Math.min(island.size - 1, mapX))
-      const clampedZ = Math.max(0, Math.min(island.size - 1, mapZ))
-      
-      const normalizedHeight = island.heightMap[clampedX]?.[clampedZ] || 0
-      return normalizedHeight * 10 - 2 // Scale to match expected height range
-    }
-    
-    // Fallback to noise system
+    // Use the same terrain noise function as the visual mesh
     return terrainNoise.islandHeight(x, z)
   } catch (error) {
     console.error('Failed to get terrain height:', error)
     // Fallback to safe water level
     return WATER_DEPTH
   }
+  */
 } 

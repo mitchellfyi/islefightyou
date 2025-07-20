@@ -79,11 +79,11 @@ export default function GamePage() {
       // Set the game state
       setCurrentIsland(island)
       
-      // Position player on terrain at center of island
-      const terrainHeight = terrainNoise.islandHeight(0, 0)
+      // VISUAL TEST MODE: Position player at ground level for testing
+      const terrainHeight = 0 // Ground level
       const playerWithPosition = {
         ...demoPlayer,
-        position: { x: 0, y: terrainHeight + 0.5, z: 0 } // 0.5 units above terrain
+        position: { x: 0, y: terrainHeight + 0.5, z: 0 } // Should be at y=0.5
       }
       setPlayer(playerWithPosition)
       

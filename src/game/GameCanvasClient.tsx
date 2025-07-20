@@ -39,19 +39,18 @@ function TerrainFollowController({
   useFrame((state) => {
     if (!player || !currentIsland) return
     
-    // Get terrain height using our noise system (same as terrain generation)
-    const currentHeight = terrainNoise.islandHeight(player.position.x, player.position.z)
+    // VISUAL TEST MODE: Get height from visual test system
+    const currentHeight = 0 // Ground level for visual testing
     let newY = player.position.y
     
-    // Debug every 60 frames (once per second at 60fps)
-    if (Math.floor(state.clock.elapsedTime * 60) % 60 === 0) {
-      console.log('🎯 Terrain snap debug:', {
-        playerXZ: `${player.position.x.toFixed(1)}, ${player.position.z.toFixed(1)}`,
-        terrainHeight: currentHeight.toFixed(2),
-        playerY: player.position.y.toFixed(2),
-        targetY: (currentHeight + 0.5).toFixed(2),
-        isJumping
-      })
+    // Debug every 120 frames (every 2 seconds)
+    if (Math.floor(state.clock.elapsedTime * 60) % 120 === 0) {
+      console.log('=== TERRAIN TEST ===')
+      console.log('Terrain Height:', currentHeight)
+      console.log('Player Y:', player.position.y)
+      console.log('Height Difference:', (player.position.y - currentHeight).toFixed(2))
+      console.log('Expected: 0.50')
+      console.log('==================')
     }
     
     if (isJumping) {
@@ -188,12 +187,12 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
   }, [isJumping])
 
   const handlePlayerMove = useCallback((direction: Vector3) => {
-    if (player) {
+    if (player && currentIsland) {
       const newX = player.position.x + direction.x
       const newZ = player.position.z + direction.z
       
-      // Check if new position is within island boundaries
-      if (isPositionValid(newX, newZ)) {
+      // Check if new position is within island boundaries and not blocked by obstacles
+      if (isPositionValid(newX, newZ) && !isPositionBlocked(newX, newZ, currentIsland)) {
         // Only update X and Z, let terrain following handle Y
         updatePlayerPosition({
           x: newX,
@@ -202,13 +201,35 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
         })
       }
     }
-  }, [player, updatePlayerPosition])
+  }, [player, currentIsland, updatePlayerPosition])
 
   // Check if a position is within the island boundaries
   const isPositionValid = (x: number, z: number): boolean => {
     // Check if position is on solid terrain (above water level)
     const terrainHeight = terrainNoise.islandHeight(x, z)
     return terrainHeight > -2 // Allow movement on land and shallow water
+  }
+
+  // Check if a position is blocked by resource nodes (obstacles)
+  const isPositionBlocked = (x: number, z: number, island: any): boolean => {
+    if (!island?.resourceNodes) return false
+    
+    const COLLISION_RADIUS = 0.8 // Player collision radius
+    const OBSTACLE_RADIUS = 0.6 // Resource node collision radius
+    const MIN_DISTANCE = COLLISION_RADIUS + OBSTACLE_RADIUS
+    
+    for (const node of island.resourceNodes) {
+      const dx = x - node.position.x
+      const dz = z - node.position.z
+      const distance = Math.sqrt(dx * dx + dz * dz)
+      
+      // If too close to a resource node, block movement
+      if (distance < MIN_DISTANCE) {
+        return true
+      }
+    }
+    
+    return false
   }
 
 

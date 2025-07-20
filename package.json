@@ -9,7 +9,10 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:visual": "playwright test",
+    "test:visual:ui": "playwright test --ui",
+    "test:terrain": "playwright test terrain-alignment"
   },
   "dependencies": {
     "@react-three/drei": "^10.5.1",
@@ -28,6 +31,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.1",

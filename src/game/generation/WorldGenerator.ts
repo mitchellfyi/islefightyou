@@ -151,7 +151,10 @@ export class WorldGenerator {
     biomeMap: BiomeType[][]
   ): ResourceNode[] {
     const resourceNodes: ResourceNode[] = []
-    const resourceDensity = 0.05 // 5% chance per tile
+    const baseDensity = 0.08 // 8% base chance per tile
+    
+    // Track resource counts to ensure minimum resources
+    const resourceCounts = new Map<ResourceType, number>()
     
     for (let x = 0; x < size; x++) {
       for (let z = 0; z < size; z++) {
@@ -161,13 +164,25 @@ export class WorldGenerator {
         // Skip water areas
         if (height < 0.1) continue
         
-        // Use resource noise to determine if there should be a resource here
-        const resourceChance = (this.resourceNoise(x * 0.1, z * 0.1) + 1) / 2
+        // Biome-specific density modifiers
+        const biomeModifier = this.getBiomeDensityModifier(biome)
+        const adjustedDensity = baseDensity * biomeModifier
         
-        if (resourceChance > (1 - resourceDensity)) {
+        // Use multiple noise layers for natural clustering
+        const primaryNoise = (this.resourceNoise(x * 0.08, z * 0.08) + 1) / 2
+        const clusterNoise = (this.resourceNoise(x * 0.15 + 500, z * 0.15 + 500) + 1) / 2
+        const detailNoise = (this.resourceNoise(x * 0.25 + 1000, z * 0.25 + 1000) + 1) / 2
+        
+        // Combined probability for more natural distribution
+        const resourceChance = (primaryNoise * 0.5 + clusterNoise * 0.3 + detailNoise * 0.2)
+        
+        if (resourceChance > (1 - adjustedDensity)) {
           const resourceType = this.determineResourceType(biome, height, resourceChance)
           
           if (resourceType) {
+            // Track resource count
+            resourceCounts.set(resourceType, (resourceCounts.get(resourceType) || 0) + 1)
+            
             resourceNodes.push({
               id: uuidv4(),
               type: resourceType,
@@ -185,7 +200,106 @@ export class WorldGenerator {
       }
     }
     
+    // Ensure minimum essential resources (at least some wood and stone)
+    this.ensureMinimumResources(resourceNodes, size, heightMap, biomeMap, resourceCounts)
+    
     return resourceNodes
+  }
+
+  private getBiomeDensityModifier(biome: BiomeType): number {
+    switch (biome) {
+      case BiomeType.FOREST:
+        return 1.8 // Dense forests have more resources
+      case BiomeType.MOUNTAIN:
+        return 1.4 // Rocky areas have stone/metal
+      case BiomeType.SWAMP:
+        return 1.2 // Swamps have unique resources
+      case BiomeType.BEACH:
+        return 0.6 // Beaches have fewer resources
+      case BiomeType.GRASSLAND:
+        return 0.8 // Open grassland has some resources
+      case BiomeType.DESERT:
+        return 0.4 // Desert has very few resources
+      default:
+        return 1.0
+    }
+  }
+
+  private ensureMinimumResources(
+    resourceNodes: ResourceNode[],
+    size: number,
+    heightMap: number[][],
+    biomeMap: BiomeType[][],
+    resourceCounts: Map<ResourceType, number>
+  ): void {
+    const minimums = {
+      [ResourceType.WOOD]: 3,
+      [ResourceType.STONE]: 2,
+      [ResourceType.BERRIES]: 1
+    }
+
+    for (const [resourceType, minCount] of Object.entries(minimums)) {
+      const currentCount = resourceCounts.get(resourceType as ResourceType) || 0
+      const needed = minCount - currentCount
+
+      if (needed > 0) {
+        // Find suitable locations and add missing resources
+        for (let i = 0; i < needed; i++) {
+          const location = this.findSuitableLocationForResource(resourceType as ResourceType, size, heightMap, biomeMap)
+          if (location) {
+            resourceNodes.push({
+              id: uuidv4(),
+              type: resourceType as ResourceType,
+              position: {
+                x: location.x - size / 2,
+                y: location.height * 10,
+                z: location.z - size / 2
+              },
+              quantity: this.getResourceQuantity(resourceType as ResourceType),
+              maxQuantity: this.getResourceQuantity(resourceType as ResourceType),
+              respawnRate: this.getResourceRespawnRate(resourceType as ResourceType)
+            })
+          }
+        }
+      }
+    }
+  }
+
+  private findSuitableLocationForResource(
+    resourceType: ResourceType,
+    size: number,
+    heightMap: number[][],
+    biomeMap: BiomeType[][]
+  ): { x: number, z: number, height: number } | null {
+    // Try random locations until we find a suitable one
+    for (let attempts = 0; attempts < 50; attempts++) {
+      const x = Math.floor(Math.random() * size)
+      const z = Math.floor(Math.random() * size)
+      const height = heightMap[x][z]
+      const biome = biomeMap[x][z]
+
+      if (height < 0.1) continue // Skip water
+
+      // Check if this biome is suitable for the resource type
+      const suitableBiomes = this.getSuitableBiomesForResource(resourceType)
+      if (suitableBiomes.includes(biome)) {
+        return { x, z, height }
+      }
+    }
+    return null
+  }
+
+  private getSuitableBiomesForResource(resourceType: ResourceType): BiomeType[] {
+    switch (resourceType) {
+      case ResourceType.WOOD:
+        return [BiomeType.FOREST, BiomeType.GRASSLAND, BiomeType.SWAMP]
+      case ResourceType.STONE:
+        return [BiomeType.MOUNTAIN, BiomeType.DESERT, BiomeType.BEACH]
+      case ResourceType.BERRIES:
+        return [BiomeType.FOREST, BiomeType.GRASSLAND]
+      default:
+        return [BiomeType.GRASSLAND]
+    }
   }
 
   private determineResourceType(

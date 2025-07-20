@@ -195,13 +195,18 @@ export class PerlinNoise {
     islandRadius: number = 14, 
     centerHeight: number = 8
   ): number {
+    // FLAT TERRAIN TEST: Return fixed height for testing alignment
     const distanceFromCenter = Math.sqrt(x * x + y * y)
     
-    // Return water level for points outside island
     if (distanceFromCenter >= islandRadius) {
-      return -5 // Deep water for swimming/diving
+      return -5 // Water outside island
     }
-
+    
+    // Return flat terrain at height 2 for testing
+    return 2
+    
+    // TODO: Restore original terrain generation after testing
+    /*
     // Enhanced base island shape - mostly flat with gentle hills
     const normalizedDistance = distanceFromCenter / islandRadius
     
@@ -244,6 +249,7 @@ export class PerlinNoise {
     }
 
     return finalHeight
+    */
   }
 
   /**
