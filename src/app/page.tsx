@@ -7,6 +7,7 @@ import { createWorldGenerator, generateSeed } from '@/game/generation/WorldGener
 import { ResourceType } from '@/types/game'
 import { SurvivalManager } from '@/game/systems/SurvivalManager'
 import { terrainNoise } from '@/game/utils/noise'
+import { hexagonalTerrain } from '@/game/utils/hexagonalTerrain'
 import { motion } from 'framer-motion'
 
 export default function GamePage() {
@@ -79,11 +80,11 @@ export default function GamePage() {
       // Set the game state
       setCurrentIsland(island)
       
-      // VISUAL TEST MODE: Position player at ground level for testing
-      const terrainHeight = 0 // Ground level
+      // Position player on terrain at center of island
+      const terrainHeight = hexagonalTerrain.getHeight(0, 0)
       const playerWithPosition = {
         ...demoPlayer,
-        position: { x: 0, y: terrainHeight + 0.5, z: 0 } // Should be at y=0.5
+        position: { x: 0, y: terrainHeight + 0.8, z: 0 } // 0.8 units above terrain
       }
       setPlayer(playerWithPosition)
       

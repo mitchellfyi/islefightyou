@@ -7,12 +7,14 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import * as THREE from 'three'
 import { Island, getTerrainHeightAt } from './Island'
+import { HexagonalIsland } from './HexagonalIsland'
 import { Player } from './Player'
 import { TouchControls } from './controls/TouchControls'
 import { UI } from './ui/UI'
 import { useGameStore } from '../stores/gameStore'
 import { ResourceType } from '@/types/game'
 import { terrainNoise } from './utils/noise'
+import { hexagonalTerrain } from './utils/hexagonalTerrain'
 
 interface GameCanvasClientProps {
   className?: string
@@ -39,17 +41,18 @@ function TerrainFollowController({
   useFrame((state) => {
     if (!player || !currentIsland) return
     
-    // VISUAL TEST MODE: Get height from visual test system
-    const currentHeight = 0 // Ground level for visual testing
+    // Get terrain height using hexagonal tessellation system
+    const currentHeight = hexagonalTerrain.getHeight(player.position.x, player.position.z)
     let newY = player.position.y
     
     // Debug every 120 frames (every 2 seconds)
     if (Math.floor(state.clock.elapsedTime * 60) % 120 === 0) {
       console.log('=== TERRAIN TEST ===')
-      console.log('Terrain Height:', currentHeight)
-      console.log('Player Y:', player.position.y)
+      console.log('Player XZ:', `${player.position.x.toFixed(1)}, ${player.position.z.toFixed(1)}`)
+      console.log('Terrain Height:', currentHeight.toFixed(2))
+      console.log('Player Y:', player.position.y.toFixed(2))
       console.log('Height Difference:', (player.position.y - currentHeight).toFixed(2))
-      console.log('Expected: 0.50')
+      console.log('Expected: 0.80')
       console.log('==================')
     }
     
@@ -60,15 +63,21 @@ function TerrainFollowController({
       setJumpVelocity(newVelocity)
       
       // Check if landed on terrain
-      if (newY <= currentHeight + 0.5) { // Character height offset - much closer to terrain
-        newY = currentHeight + 0.5
+      if (newY <= currentHeight + 0.8) { // Character height offset
+        newY = currentHeight + 0.8
         setIsJumping(false)
         setJumpVelocity(0)
       }
     } else {
-      // Directly snap to terrain height for immediate following
-      const targetY = currentHeight + 0.5 // Character stands 0.5 units above terrain
-      newY = targetY
+      // Smooth terrain following with slight interpolation
+      const targetY = currentHeight + 0.8 // Character stands 0.8 units above terrain
+      const smoothingFactor = 0.15 // Smooth interpolation
+      newY = player.position.y + (targetY - player.position.y) * smoothingFactor
+      
+      // Snap if very close to target
+      if (Math.abs(newY - targetY) < 0.01) {
+        newY = targetY
+      }
     }
     
     // Always update Y position for terrain following
@@ -316,8 +325,8 @@ export default function GameCanvasClient({ className = '' }: GameCanvasClientPro
           {/* Game Objects */}
           {currentIsland ? (
             <>
-              {console.log('🎮 Rendering Island component', currentIsland.id)}
-              <Island
+              {console.log('🎮 Rendering Hexagonal Island component', currentIsland.id)}
+              <HexagonalIsland
                 island={currentIsland}
                 buildings={buildings}
               />

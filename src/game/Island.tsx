@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Island as IslandType, Building, BiomeType, ResourceType } from '@/types/game'
 import { terrainNoise, TerrainUtils } from './utils/noise'
-import { VisualTestTerrain, getVisualTestHeight } from './VisualTest'
+// VisualTest removed - using hexagonal terrain system
 
 interface IslandProps {
   island: IslandType
@@ -113,7 +113,7 @@ export function Island({ island, buildings }: IslandProps) {
       </mesh>
 
       {/* VISUAL TEST MODE: Simple geometric shapes for precise testing */}
-      <VisualTestTerrain />
+      {/* VisualTestTerrain removed - using hexagonal terrain system */}
 
       {/* Enhanced Natural Resource Nodes */}
       {island.resourceNodes?.map((node) => (
@@ -494,7 +494,7 @@ function getBuildingColor(type: string): string {
  */
 export function getTerrainHeightAt(x: number, z: number, island?: IslandType): number {
   // VISUAL TEST MODE: Use fixed height for testing
-  return getVisualTestHeight(x, z)
+  return terrainNoise.islandHeight(x, z)
   
   /* TODO: Restore original after testing
   try {
